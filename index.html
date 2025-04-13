@@ -1,20 +1,38 @@
-<!-- Pastikan bagian ini ada di index.html -->
-<script type="module">
-  // Import Firebase SDK
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viral Video</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Viral Video</h1>
+        <div id="youtubeVideo"></div>
+        <p id="no-video-message">Loading video...</p>
+        <button id="downloadButton" disabled>Download</button>
+    </div>
 
-  // Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
-    authDomain: "viral-cok.firebaseapp.com",
-    projectId: "viral-cok",
-    storageBucket: "viral-cok.firebasestorage.app",
-    messagingSenderId: "465866226747",
-    appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
-  };
+    <!-- Firebase SDK via CDN -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  window.firestoreDb = getFirestore(app);
-</script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
+            authDomain: "viral-cok.firebaseapp.com",
+            projectId: "viral-cok",
+            storageBucket: "viral-cok.firebasestorage.app",
+            messagingSenderId: "465866226747",
+            appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.firestoreDb = getFirestore(app);
+    </script>
+
+    <!-- Aplikasi Script -->
+    <script src="script.js"></script>
+</body>
+</html>
