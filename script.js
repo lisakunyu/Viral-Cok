@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Reset UI awal
     iframe.style.display = 'none';
     noVideoMessage.style.display = 'none';
-    downloadButton.textContent = 'DOWNLOAD';
+    downloadButton.textContent = 'Download';
     downloadButton.disabled = true;
 
     // Handle download button
@@ -65,8 +65,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             countdown--;
             if (countdown > 0) {
                 downloadButton.textContent = `Download (${countdown} detik)`;
-            } else if (countdown === 0) {
-                downloadButton.textContent = 'DOWNLOAD';
+            } else {
+                downloadButton.textContent = 'Download';
                 downloadButton.disabled = false;
                 clearInterval(countdownInterval);
             }
@@ -113,6 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             iframe.style.display = 'none';
             noVideoMessage.style.display = 'block';
             noVideoMessage.textContent = 'Gagal memproses URL video.';
+            downloadButton.disabled = true;
             return;
         }
 
@@ -149,6 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 iframe.style.display = 'none';
                                 noVideoMessage.style.display = 'block';
                                 noVideoMessage.textContent = 'Gagal memuat video. Periksa URL.';
+                                downloadButton.disabled = true;
                             },
                         },
                     });
@@ -156,6 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     iframe.style.display = 'none';
                     noVideoMessage.style.display = 'block';
                     noVideoMessage.textContent = 'Gagal memulai pemutar video.';
+                    downloadButton.disabled = true;
                 }
             };
 
@@ -166,20 +169,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Fallback jika YouTube API tidak dimuat
             setTimeout(() => {
-                if (!window.YT || !player) {
+                if (!player) {
                     iframe.style.display = 'none';
                     noVideoMessage.style.display = 'block';
                     noVideoMessage.textContent = 'Gagal memuat YouTube. Coba lagi nanti.';
+                    downloadButton.disabled = true;
                 }
             }, 5000);
         } else {
             iframe.style.display = 'none';
             noVideoMessage.style.display = 'block';
             noVideoMessage.textContent = 'URL video tidak valid.';
+            downloadButton.disabled = true;
         }
     } else {
         iframe.style.display = 'none';
         noVideoMessage.style.display = 'block';
         noVideoMessage.textContent = 'Tidak ada video yang tersedia.';
+        downloadButton.disabled = true;
     }
 });
