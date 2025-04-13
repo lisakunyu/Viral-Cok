@@ -28,75 +28,78 @@
     </div>
 
     <!-- Firebase SDK via CDN -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
-            authDomain: "viral-cok.firebaseapp.com",
-            projectId: "viral-cok",
-            storageBucket: "viral-cok.firebasestorage.app",
-            messagingSenderId: "465866226747",
-            appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        window.firestoreDb = getFirestore(app);
-    </script>
-
-    <!-- Admin Script -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js"></script>
     <script>
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
+                authDomain: "viral-cok.firebaseapp.com",
+                projectId: "viral-cok",
+                storageBucket: "viral-cok.firebasestorage.app",
+                messagingSenderId: "465866226747",
+                appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
+            };
+            firebase.initializeApp(firebaseConfig);
+            window.firestoreDb = firebase.firestore();
+        } catch (error) {
+            alert('Gagal menginisialisasi Firebase.');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const db = window.firestoreDb;
             if (!db) {
-                alert('Database tidak tersedia.');
+                document.getElementById('statusMessage').textContent = 'Database tidak tersedia.';
                 return;
             }
 
             // Muat data yang ada
-            db.collection('videos').doc('list').get().then(doc => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    document.getElementById('video1').value = data.urls[0] || '';
-                    document.getElementById('video2').value = data.urls[1] || '';
-                    document.getElementById('video3').value = data.urls[2] || '';
-                    document.getElementById('video4').value = data.urls[3] || '';
-                    document.getElementById('video5').value = data.urls[4] || '';
-                }
-            }).catch(error => {
-                alert('Gagal memuat data video.');
-            });
-
-            db.collection('settings').doc('download').get().then(doc => {
-                if (doc.exists) {
-                    document.getElementById('downloadUrl').value = doc.data().url || '';
-                }
-            }).catch(error => {
-                alert('Gagal memuat link download.');
-            });
-
-            // Simpan data
-            document.getElementById('videoForm').addEventListener('submit', e => {
-                e.preventDefault();
-                const videos = [
-                    document.getElementById('video1').value,
-                    document.getElementById('video2').value,
-                    document.getElementById('video3').value,
-                    document.getElementById('video4').value,
-                    document.getElementById('video5').value
-                ];
-                const downloadUrl = document.getElementById('downloadUrl').value;
-
-                Promise.all([
-                    db.collection('videos').doc('list').set({ urls: videos }),
-                    db.collection('settings').doc('download').set({ url: downloadUrl })
-                ]).then(() => {
-                    document.getElementById('statusMessage').textContent = 'Data berhasil disimpan!';
+            try {
+                db.collection('videos').doc('list').get().then(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        document.getElementById('video1').value = data.urls[0] || '';
+                        document.getElementById('video2').value = data.urls[1] || '';
+                        document.getElementById('video3').value = data.urls[2] || '';
+                        document.getElementById('video4').value = data.urls[3] || '';
+                        document.getElementById('video5').value = data.urls[4] || '';
+                    }
                 }).catch(error => {
-                    alert('Gagal menyimpan data.');
+                    document.getElementById('statusMessage').textContent = 'Gagal memuat data video.';
                 });
-            });
+
+                db.collection('settings').doc('download').get().then(doc => {
+                    if (doc.exists) {
+                        document.getElementById('downloadUrl').value = doc.data().url || '';
+                    }
+                }).catch(error => {
+                    document.getElementById('statusMessage').textContent = 'Gagal memuat link download.';
+                });
+
+                // Simpan data
+                document.getElementById('videoForm').addEventListener('submit', e => {
+                    e.preventDefault();
+                    const videos = [
+                        document.getElementById('video1').value,
+                        document.getElementById('video2').value,
+                        document.getElementById('video3').value,
+                        document.getElementById('video4').value,
+                        document.getElementById('video5').value
+                    ];
+                    const downloadUrl = document.getElementById('downloadUrl').value;
+
+                    Promise.all([
+                        db.collection('videos').doc('list').set({ urls: videos }),
+                        db.collection('settings').doc('download').set({ url: downloadUrl })
+                    ]).then(() => {
+                        document.getElementById('statusMessage').textContent = 'Data berhasil disimpan!';
+                    }).catch(error => {
+                        document.getElementById('statusMessage').textContent = 'Gagal menyimpan data.';
+                    });
+                });
+            } catch (error) {
+                document.getElementById('statusMessage').textContent = 'Gagal mengakses database.';
+            }
         });
     </script>
 </body>
