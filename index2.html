@@ -1,81 +1,138 @@
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
-  import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Set Viral Videos & Download Link</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <h2>Admin Settings</h2>
+        <fieldset>
+            <legend>YouTube Videos</legend>
+            <input type="text" id="video1" placeholder="YouTube URL 1 (e.g., https://www.youtube.com/watch?v=ID)">
+            <input type="text" id="video2" placeholder="YouTube URL 2">
+            <input type="text" id="video3" placeholder="YouTube URL 3">
+            <input type="text" id="video4" placeholder="YouTube URL 4">
+            <input type="text" id="video5" placeholder="YouTube URL 5">
+            <button onclick="saveVideos()">OK</button>
+        </fieldset>
+        <fieldset>
+            <legend>Download Link</legend>
+            <input type="text" id="downloadLink" placeholder="Download URL (e.g., https://example.com)">
+            <button onclick="saveDownloadLink()">OK</button>
+        </fieldset>
+    </div>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
-    authDomain: "viral-cok.firebaseapp.com",
-    projectId: "viral-cok",
-    storageBucket: "viral-cok.firebasestorage.app",
-    messagingSenderId: "465866226747",
-    appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
-  };
+    <!-- Firebase SDK via CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"></script>
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
+            authDomain: "viral-cok.firebaseapp.com",
+            projectId: "viral-cok",
+            storageBucket: "viral-cok.firebasestorage.app",
+            messagingSenderId: "465866226747",
+            appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
+        };
 
-  // Load saved videos and download link
-  window.onload = async () => {
-    try {
-      // Load videos
-      const videosDoc = await getDoc(doc(db, 'settings', 'youtubeVideos'));
-      const videos = videosDoc.exists() ? videosDoc.data().urls : ['', '', '', '', ''];
-      document.getElementById('video1').value = videos[0] || '';
-      document.getElementById('video2').value = videos[1] || '';
-      document.getElementById('video3').value = videos[2] || '';
-      document.getElementById('video4').value = videos[3] || '';
-      document.getElementById('video5').value = videos[4] || '';
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-      // Load download link
-      const downloadDoc = await getDoc(doc(db, 'settings', 'downloadLink'));
-      const downloadLink = downloadDoc.exists() ? downloadDoc.data().url : '';
-      document.getElementById('downloadLink').value = downloadLink;
-    } catch (error) {
-      console.error('Error loading settings:', error);
-      alert('Failed to load settings. Check console for details.');
-    }
-  };
+        // Load saved videos and download link from Firestore
+        window.onload = function() {
+            // Load videos
+            db.collection("videos").get().then(function(querySnapshot) {
+                let videos = ['', '', '', '', ''];
+                querySnapshot.forEach(function(doc) {
+                    const index = parseInt(doc.id.replace('video', '')) - 1;
+                    videos[index] = doc.data().url || '';
+                });
+                document.getElementById('video1').value = videos[0];
+                document.getElementById('video2').value = videos[1];
+                document.getElementById('video3').value = videos[2];
+                document.getElementById('video4').value = videos[3];
+                document.getElementById('video5').value = videos[4];
+            }).catch(function(error) {
+                console.error("Error loading videos: ", error);
+            });
 
-  async function saveVideos() {
-    const videos = [
-      document.getElementById('video1').value.trim(),
-      document.getElementById('video2').value.trim(),
-      document.getElementById('video3').value.trim(),
-      document.getElementById('video4').value.trim(),
-      document.getElementById('video5').value.trim()
-    ];
+            // Load download link
+            db.collection("settings").doc("download").get().then(function(doc) {
+                if (doc.exists) {
+                    document.getElementById('downloadLink').value = doc.data().url || '';
+                }
+            }).catch(function(error) {
+                console.error("Error loading download link: ", error);
+            });
+        };
 
-    // Validate URLs
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?[A-Za-z0-9_-]+/;
-    const validVideos = videos.map(url => (url === '' || youtubeRegex.test(url)) ? url : '');
+        // Save videos to Firestore
+        function saveVideos() {
+            const videos = [
+                document.getElementById('video1').value.trim(),
+                document.getElementById('video2').value.trim(),
+                document.getElementById('video3').value.trim(),
+                document.getElementById('video4').value.trim(),
+                document.getElementById('video5').value.trim()
+            ];
 
-    try {
-      await setDoc(doc(db, 'settings', 'youtubeVideos'), { urls: validVideos });
-      alert('Videos saved! Valid videos will play randomly on the main page.');
-    } catch (error) {
-      console.error('Error saving videos:', error);
-      alert('Failed to save videos. Check console for details.');
-    }
-  }
+            // Validate URLs
+            const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?[A-Za-z0-9_-]+/;
+            const validVideos = videos.map(url => youtubeRegex.test(url) || url === '' ? url : '');
 
-  async function saveDownloadLink() {
-    const downloadLink = document.getElementById('downloadLink').value.trim();
-    try {
-      if (downloadLink === '') {
-        await setDoc(doc(db, 'settings', 'downloadLink'), { url: '' });
-        alert('Download link cleared.');
-        return;
-      }
-      const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/;
-      if (urlRegex.test(downloadLink)) {
-        await setDoc(doc(db, 'settings', 'downloadLink'), { url: downloadLink });
-        alert('Download link saved! It will be available on the main page.');
-      } else {
-        alert('Please enter a valid URL (e.g., https://example.com).');
-      }
-    } catch (error) {
-      console.error('Error saving download link:', error);
-      alert('Failed to save download link. Check console for details.');
-    }
-  }
-</script>
+            // Save to Firestore
+            validVideos.forEach(function(url, index) {
+                const docId = `video${index + 1}`;
+                if (url !== '') {
+                    db.collection("videos").doc(docId).set({
+                        url: url
+                    }).then(function() {
+                        console.log(`Video ${index + 1} saved`);
+                    }).catch(function(error) {
+                        console.error("Error saving video: ", error);
+                    });
+                } else {
+                    db.collection("videos").doc(docId).delete().catch(function(error) {
+                        console.error("Error deleting video: ", error);
+                    });
+                }
+            });
+
+            alert('Videos saved! Valid videos will play randomly on the main page.');
+        }
+
+        // Save download link to Firestore
+        function saveDownloadLink() {
+            const downloadLink = document.getElementById('downloadLink').value.trim();
+            if (downloadLink === '') {
+                db.collection("settings").doc("download").delete().then(function() {
+                    alert('Download link cleared.');
+                }).catch(function(error) {
+                    console.error("Error clearing download link: ", error);
+                });
+                return;
+            }
+
+            const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/;
+            if (urlRegex.test(downloadLink)) {
+                db.collection("settings").doc("download").set({
+                    url: downloadLink
+                }).then(function() {
+                    alert('Download link saved! It will be available on the main page.');
+                }).catch(function(error) {
+                    console.error("Error saving download link: ", error);
+                });
+            } else {
+                alert('Please enter a valid URL (e.g., https://example.com).');
+            }
+        }
+    </script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92fb04310912bfdd',t:'MTc0NDU0Nzg2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body>
+</html>
