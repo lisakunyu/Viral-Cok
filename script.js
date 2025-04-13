@@ -22,9 +22,15 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 let player;
 let videoId = "";
+let countdownStarted = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('Script.js loaded');
+  const iframe = document.getElementById('youtubeVideo');
+  const noVideoMessage = document.getElementById('no-video-message');
+  const downloadButton = document.getElementById('downloadButton');
+
+  downloadButton.disabled = true;
+  downloadButton.textContent = 'Download (20 detik)';
 
   // Ambil konfigurasi dari Firestore
   let configData = { youtubeVideos: [], downloadLink: "" };
@@ -43,39 +49,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   let videos = configData.youtubeVideos || [];
   videos = videos.filter(url => url.trim() !== '');
 
-  const iframe = document.getElementById('youtubeVideo');
-  const noVideoMessage = document.getElementById('no-video-message');
-  const downloadButton = document.getElementById('downloadButton');
-
-  if (!iframe || !noVideoMessage || !downloadButton) return;
-
-  function startCountdown() {
-    let countdown = 20;
-    downloadButton.textContent = `Download (${countdown} detik)`;
-    downloadButton.disabled = true;
-    const countdownInterval = setInterval(() => {
-      countdown--;
-      if (countdown > 0) {
-        downloadButton.textContent = `Download (${countdown} detik)`;
-      } else {
-        downloadButton.textContent = 'DOWNLOAD';
-        downloadButton.disabled = false;
-        clearInterval(countdownInterval);
-      }
-    }, 1000);
-  }
-
-  downloadButton.addEventListener('click', () => {
-    if (!downloadButton.disabled) {
-      const downloadLink = configData.downloadLink || '';
-      if (downloadLink) {
-        window.open(downloadLink, '_blank');
-      } else {
-        alert('No download link set. Please configure it in the admin page.');
-      }
-    }
-  });
-
   if (videos.length > 0) {
     const randomIndex = Math.floor(Math.random() * videos.length);
     const videoUrl = videos[randomIndex];
@@ -88,22 +61,49 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (videoId) {
       iframe.style.display = 'block';
-     downloadButton.disabled = true;
-     downloadButton.textContent = 'Download (20 detik)';
       noVideoMessage.style.display = 'none';
     } else {
       iframe.style.display = 'none';
       noVideoMessage.style.display = 'block';
-      downloadButton.textContent = 'DOWNLOAD';
       downloadButton.disabled = true;
+      downloadButton.textContent = 'DOWNLOAD';
     }
   } else {
     iframe.style.display = 'none';
     noVideoMessage.style.display = 'block';
-    downloadButton.textContent = 'DOWNLOAD';
     downloadButton.disabled = true;
+    downloadButton.textContent = 'DOWNLOAD';
   }
+
+  downloadButton.addEventListener('click', () => {
+    if (!downloadButton.disabled) {
+      const downloadLink = configData.downloadLink || '';
+      if (downloadLink) {
+        window.open(downloadLink, '_blank');
+      } else {
+        alert('No download link set. Please configure it in the admin page.');
+      }
+    }
+  });
 });
+
+function startCountdown() {
+  const downloadButton = document.getElementById('downloadButton');
+  let countdown = 20;
+  downloadButton.textContent = `Download (${countdown} detik)`;
+  downloadButton.disabled = true;
+
+  const countdownInterval = setInterval(() => {
+    countdown--;
+    if (countdown > 0) {
+      downloadButton.textContent = `Download (${countdown} detik)`;
+    } else {
+      clearInterval(countdownInterval);
+      downloadButton.textContent = 'DOWNLOAD';
+      downloadButton.disabled = false;
+    }
+  }, 1000);
+}
 
 window.onYouTubeIframeAPIReady = function () {
   if (videoId) {
@@ -119,13 +119,14 @@ window.onYouTubeIframeAPIReady = function () {
           event.target.setPlaybackQuality('medium');
         },
         onStateChange: function (event) {
-          if (event.data === YT.PlayerState.PLAYING) {
+          if (event.data === YT.PlayerState.PLAYING && !countdownStarted) {
             const checkTime = setInterval(() => {
               if (player && player.getCurrentTime) {
                 const currentTime = player.getCurrentTime();
-                if (currentTime >= 10) {
-                  startCountdown();
+                if (currentTime >= 5) {
                   clearInterval(checkTime);
+                  countdownStarted = true;
+                  startCountdown();
                 }
               }
             }, 1000);
