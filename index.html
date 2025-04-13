@@ -1,38 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viral Video Player</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="video-container">
-        <div id="youtubeVideo"></div>
-        <p id="no-video-message" style="display: none;">No videos available. Please set videos in the admin page.</p>
-        SABAR TUNGGU NANTI JUGA JALAN WAKTUNYA
-        <button id="downloadButton">Download (20 detik)</button>
-    </div>
+<!-- Pastikan bagian ini ada di index.html -->
+<script type="module">
+  // Import Firebase SDK
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
+    authDomain: "viral-cok.firebaseapp.com",
+    projectId: "viral-cok",
+    storageBucket: "viral-cok.firebasestorage.app",
+    messagingSenderId: "465866226747",
+    appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
+  };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
-            authDomain: "viral-cok.firebaseapp.com",
-            projectId: "viral-cok",
-            storageBucket: "viral-cok.firebasestorage.app",
-            messagingSenderId: "465866226747",
-            appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        window.firestoreDb = db; // Membuat db tersedia secara global untuk script.js
-    </script>
-
-    <script src="script.js"></script>
-</body>
-</html>
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  window.firestoreDb = getFirestore(app);
+</script>
