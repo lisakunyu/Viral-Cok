@@ -8,9 +8,19 @@ let player;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Import Firestore functions
-    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js");
+    let doc, getDoc;
+    try {
+        const module = await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js");
+        doc = module.doc;
+        getDoc = module.getDoc;
+    } catch (error) {
+        alert('Failed to load Firestore module. Please check your internet connection.');
+        return;
+    }
+
     const db = window.firestoreDb;
     if (!db) {
+        alert('Firestore database not initialized. Please refresh the page.');
         return;
     }
 
@@ -23,7 +33,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             videos = videoDoc.data().urls || [];
         }
     } catch (error) {
-        // Silent error handling
+        alert('Failed to fetch videos from database. Please try again later.');
+        return;
     }
 
     // Filter video yang valid (tidak kosong)
@@ -32,6 +43,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const iframe = document.getElementById('youtubeVideo');
     const noVideoMessage = document.getElementById('no-video-message');
     const downloadButton = document.getElementById('downloadButton');
+
+    if (!iframe || !noVideoMessage || !downloadButton) {
+        alert('Page elements not found. Please refresh the page.');
+        return;
+    }
 
     // Handle download button
     function startCountdown() {
@@ -81,7 +97,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (videoUrl.includes('v=')) {
                 videoId = videoUrl.split('v=')[1]?.split('&')[0];
             } else if (videoUrl.includes('youtu.be')) {
-                videoId = videoUrl.split('/').pop();
+                videoId = videoUrl.split('youtu.be/')[1].split('/')[0];
+            }
+            // Validasi videoId (11 karakter, huruf, angka, underscore, dash)
+            if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+                videoId = '';
             }
         } catch (error) {
             // Silent error handling
@@ -126,7 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         },
                     });
                 } catch (error) {
-                    // Silent error handling
+                    alert('Failed to initialize video player.');
                 }
             };
 
