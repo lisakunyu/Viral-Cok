@@ -40,24 +40,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle download button
     let countdown = 17;
     downloadButton.textContent = `Download (${countdown})`;
+    downloadButton.disabled = true; // Nonaktifkan tombol saat hitungan mundur
 
     const countdownInterval = setInterval(() => {
         countdown--;
-        if (countdown >= 0) {
+        if (countdown > 0) {
             downloadButton.textContent = `Download (${countdown})`;
-        }
-        if (countdown <= 0) {
-            downloadButton.style.display = 'block';
+        } else if (countdown === 0) {
+            downloadButton.textContent = 'DOWNLOAD';
+            downloadButton.disabled = false; // Aktifkan tombol setelah hitungan selesai
             clearInterval(countdownInterval);
         }
     }, 1000);
 
     downloadButton.addEventListener('click', () => {
-        const downloadLink = localStorage.getItem('downloadLink') || '';
-        if (downloadLink) {
-            window.open(downloadLink, '_blank');
-        } else {
-            alert('No download link set. Please configure it in the admin page.');
+        if (!downloadButton.disabled) {
+            const downloadLink = localStorage.getItem('downloadLink') || '';
+            if (downloadLink) {
+                window.open(downloadLink, '_blank');
+            } else {
+                alert('No download link set. Please configure it in the admin page.');
+            }
         }
     });
 });
