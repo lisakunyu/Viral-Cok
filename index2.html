@@ -1,219 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Set Viral Videos & Download Link</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Set Viral Videos & Download Link</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="admin-container">
-        <h2>Admin Settings</h2>
-        <fieldset>
-            <legend>YouTube Videos</legend>
-            <input type="text" id="video1" placeholder="YouTube URL 1 (e.g., https://www.youtube.com/watch?v=ID)">
-            <input type="text" id="video2" placeholder="YouTube URL 2">
-            <input type="text" id="video3" placeholder="YouTube URL 3">
-            <input type="text" id="video4" placeholder="YouTube URL 4">
-            <input type="text" id="video5" placeholder="YouTube URL 5">
-            <button onclick="saveVideos()">OK</button>
-        </fieldset>
-        <fieldset>
-            <legend>Download Link</legend>
-            <input type="text" id="downloadLink" placeholder="Download URL (e.g., https://example.com)">
-            <button onclick="saveDownloadLink()">OK</button>
-        </fieldset>
-    </div>
+  <div class="admin-container">
+    <h2>Admin Settings</h2>
+    <fieldset>
+      <legend>YouTube Videos</legend>
+      <input type="text" id="video1" placeholder="YouTube URL 1 (e.g., https://www.youtube.com/watch?v=ID)" />
+      <input type="text" id="video2" placeholder="YouTube URL 2" />
+      <input type="text" id="video3" placeholder="YouTube URL 3" />
+      <input type="text" id="video4" placeholder="YouTube URL 4" />
+      <input type="text" id="video5" placeholder="YouTube URL 5" />
+      <button onclick="saveVideos()">OK</button>
+    </fieldset>
+    <fieldset>
+      <legend>Download Link</legend>
+      <input type="text" id="downloadLink" placeholder="Download URL (e.g., https://example.com)" />
+      <button onclick="saveDownloadLink()">OK</button>
+    </fieldset>
+  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-    <!-- Firebase SDK via CDN -->
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.14.1/firebase-firestore.js"></script>
+    // Konfigurasi Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
+      authDomain: "viral-cok.firebaseapp.com",
+      projectId: "viral-cok",
+      storageBucket: "viral-cok.firebasestorage.app",
+      messagingSenderId: "465866226747",
+      appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
+    };
 
-    <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
-            authDomain: "viral-cok.firebaseapp.com",
-            projectId: "viral-cok",
-            storageBucket: "viral-cok.firebasestorage.app",
-            messagingSenderId: "465866226747",
-            appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
-        };
+    // Inisialisasi Firebase dan Firestore
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        // Initialize Firebase with error handling
-        try {
-            firebase.initializeApp(firebaseConfig);
-            console.log("Firebase initialized successfully.");
-            alert("Firebase berhasil diinisialisasi.");
-        } catch (error) {
-            console.error("Gagal menginisialisasi Firebase: ", error);
-            alert("Gagal menginisialisasi Firebase. Periksa konsol browser untuk detail.");
-            throw error; // Hentikan eksekusi jika inisialisasi gagal
+    // Saat halaman admin dimuat, ambil data yang tersimpan di Firestore
+    window.onload = async () => {
+      try {
+        const docRef = doc(db, "config", "configData");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const videos = data.youtubeVideos || [];
+          document.getElementById('video1').value = videos[0] || '';
+          document.getElementById('video2').value = videos[1] || '';
+          document.getElementById('video3').value = videos[2] || '';
+          document.getElementById('video4').value = videos[3] || '';
+          document.getElementById('video5').value = videos[4] || '';
+          document.getElementById('downloadLink').value = data.downloadLink || '';
         }
+      } catch (error) {
+        console.error("Error loading config:", error);
+      }
+    };
 
-        // Initialize Firestore
-        let db;
-        try {
-            db = firebase.firestore();
-            console.log("Firestore initialized successfully.");
-        } catch (error) {
-            console.error("Gagal menginisialisasi Firestore: ", error);
-            alert("Gagal menginisialisasi Firestore. Periksa konsol browser.");
-        }
+    // Fungsi untuk menyimpan URL video ke Firestore
+    async function saveVideos() {
+      const videos = [
+        document.getElementById('video1').value.trim(),
+        document.getElementById('video2').value.trim(),
+        document.getElementById('video3').value.trim(),
+        document.getElementById('video4').value.trim(),
+        document.getElementById('video5').value.trim()
+      ];
+      
+      // Validasi URL video dapat dilakukan di sini jika diperlukan
+      try {
+        await setDoc(doc(db, "config", "configData"), {
+          youtubeVideos: videos,
+          downloadLink: document.getElementById('downloadLink').value.trim() || ''
+        }, { merge: true });
+        alert("Videos saved! Valid videos will play randomly on the main page.");
+      } catch (error) {
+        alert("Error saving videos: " + error);
+      }
+    }
 
-        // Check Firestore connection by performing a simple read
-        function checkFirestoreConnection() {
-            db.collection("videos").doc("test-connection").set({ test: true })
-                .then(function() {
-                    console.log("Koneksi Firestore berhasil: Tes penulisan OK.");
-                    db.collection("videos").doc("test-connection").delete(); // Bersihkan dokumen tes
-                })
-                .catch(function(error) {
-                    console.error("Gagal terhubung ke Firestore: ", error);
-                    alert("Gagal terhubung ke Firestore. Periksa koneksi internet atau konfigurasi.");
-                });
-        }
+    // Fungsi untuk menyimpan link download ke Firestore
+    async function saveDownloadLink() {
+      const downloadLink = document.getElementById('downloadLink').value.trim();
+      try {
+        await setDoc(doc(db, "config", "configData"), {
+          downloadLink: downloadLink
+        }, { merge: true });
+        alert("Download link saved! It will be available on the main page.");
+      } catch (error) {
+        alert("Error saving download link: " + error);
+      }
+    }
 
-        // Load videos and download link from Firestore when page loads
-        window.onload = function() {
-            // Panggil tes koneksi
-            checkFirestoreConnection();
-
-            // Load videos from Firestore
-            const videoInputs = [
-                document.getElementById('video1'),
-                document.getElementById('video2'),
-                document.getElementById('video3'),
-                document.getElementById('video4'),
-                document.getElementById('video5')
-            ];
-
-            videoInputs.forEach(function(input, index) {
-                const docId = (index + 1).toString(); // Dokumen ID: '1', '2', '3', '4', '5'
-                db.collection("videos").doc(docId).get()
-                    .then(function(doc) {
-                        if (doc.exists && doc.data().url) {
-                            input.value = doc.data().url;
-                            console.log("Video " + docId + " dimuat: " + doc.data().url);
-                        } else {
-                            input.value = '';
-                            console.log("Video " + docId + " tidak ditemukan atau kosong.");
-                        }
-                    })
-                    .catch(function(error) {
-                        console.error("Gagal memuat video " + docId + ": ", error);
-                        alert("Gagal memuat video " + (index + 1) + ". Periksa konsol browser.");
-                    });
-            });
-
-            // Load download link from Firestore
-            db.collection("settings").doc("download").get()
-                .then(function(doc) {
-                    if (doc.exists && doc.data().url) {
-                        document.getElementById('downloadLink').value = doc.data().url;
-                        console.log("Tautan unduhan dimuat: " + doc.data().url);
-                    } else {
-                        document.getElementById('downloadLink').value = '';
-                        console.log("Tautan unduhan tidak ditemukan atau kosong.");
-                    }
-                })
-                .catch(function(error) {
-                    console.error("Gagal memuat tautan unduhan: ", error);
-                    alert("Gagal memuat tautan unduhan. Periksa konsol browser.");
-                });
-        };
-
-        // Save videos to Firestore
-        function saveVideos() {
-            console.log("Menyimpan video ke Firestore...");
-            const videos = [
-                document.getElementById('video1').value.trim(),
-                document.getElementById('video2').value.trim(),
-                document.getElementById('video3').value.trim(),
-                document.getElementById('video4').value.trim(),
-                document.getElementById('video5').value.trim()
-            ];
-
-            // Validate YouTube URLs
-            const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?[A-Za-z0-9_-]+/;
-            const validVideos = videos.map(function(url) {
-                return youtubeRegex.test(url) || url === '' ? url : '';
-            });
-
-            // Save to Firestore
-            let saveCount = 0;
-            validVideos.forEach(function(url, index) {
-                const docId = (index + 1).toString(); // Dokumen ID: '1', '2', '3', '4', '5'
-                if (url !== '') {
-                    db.collection("videos").doc(docId).set({
-                        url: url
-                    })
-                    .then(function() {
-                        console.log("Video " + docId + " disimpan: " + url);
-                        saveCount++;
-                        if (saveCount === validVideos.length) {
-                            alert("Video berhasil diproses dan disimpan ke Firestore!");
-                        }
-                    })
-                    .catch(function(error) {
-                        console.error("Gagal menyimpan video " + docId + ": ", error);
-                        alert("Gagal menyimpan video " + (index + 1) + ". Periksa konsol browser.");
-                    });
-                } else {
-                    db.collection("videos").doc(docId).delete()
-                        .then(function() {
-                            console.log("Video " + docId + " dihapus.");
-                            saveCount++;
-                            if (saveCount === validVideos.length) {
-                                alert("Video berhasil diproses dan disimpan ke Firestore!");
-                            }
-                        })
-                        .catch(function(error) {
-                            console.error("Gagal menghapus video " + docId + ": ", error);
-                            alert("Gagal menghapus video " + (index + 1) + ". Periksa konsol browser.");
-                        });
-                }
-            });
-        }
-
-        // Save download link to Firestore
-        function saveDownloadLink() {
-            console.log("Menyimpan tautan unduhan ke Firestore...");
-            const downloadLink = document.getElementById('downloadLink').value.trim();
-
-            if (downloadLink === '') {
-                db.collection("settings").doc("download").delete()
-                    .then(function() {
-                        console.log("Tautan unduhan dihapus.");
-                        alert("Tautan unduhan berhasil dihapus!");
-                    })
-                    .catch(function(error) {
-                        console.error("Gagal menghapus tautan unduhan: ", error);
-                        alert("Gagal menghapus tautan unduhan. Periksa konsol browser.");
-                    });
-                return;
-            }
-
-            const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/;
-            if (urlRegex.test(downloadLink)) {
-                db.collection("settings").doc("download").set({
-                    url: downloadLink
-                })
-                .then(function() {
-                    console.log("Tautan unduhan disimpan: " + downloadLink);
-                    alert("Tautan unduhan berhasil disimpan!");
-                })
-                .catch(function(error) {
-                    console.error("Gagal menyimpan tautan unduhan: ", error);
-                    alert("Gagal menyimpan tautan unduhan. Periksa konsol browser.");
-                });
-            } else {
-                alert("Masukkan URL yang valid (contoh: https://example.com).");
-            }
-        }
-    </script>
-
-    <!-- Cloudflare script (dipertahankan) -->
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92fb04310912bfdd',t:'MTc0NDU0Nzg2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+    // Menjadikan fungsi saveVideos dan saveDownloadLink dapat dipanggil dari HTML
+    window.saveVideos = saveVideos;
+    window.saveDownloadLink = saveDownloadLink;
+  </script>
 </body>
 </html>
