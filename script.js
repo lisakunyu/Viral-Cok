@@ -14,11 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     iframe.style.display = 'none';
-    noVideoMessage.style.display = 'none';
+    noVideoMessage.style.display = 'block';
+    noVideoMessage.textContent = 'Memuat video...';
 
     const db = window.firestoreDb;
     if (!db) {
-        noVideoMessage.style.display = 'block';
         noVideoMessage.textContent = 'Database tidak tersedia.';
         return;
     }
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 iframe.style.display = 'none';
                 noVideoMessage.style.display = 'block';
-                noVideoMessage.textContent = 'Tidak ada data video.';
+                noVideoMessage.textContent = 'Tidak ada data video di database.';
             }
         }).catch(error => {
             iframe.style.display = 'none';
