@@ -85,5 +85,3 @@ downloadButton.addEventListener('click', () => {
         alert('No download link set. Please configure it in the admin page.');
     }
 });
-
-});
