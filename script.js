@@ -4,9 +4,24 @@ tag.src = 'https://www.youtube.com/iframe_api';
 const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-let player;
+let player = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Reset UI awal
+    const iframe = document.getElementById('youtubeVideo');
+    const noVideoMessage = document.getElementById('no-video-message');
+    const downloadButton = document.getElementById('downloadButton');
+
+    if (!iframe || !noVideoMessage || !downloadButton) {
+        alert('Elemen halaman tidak ditemukan. Muat ulang halaman.');
+        return;
+    }
+
+    iframe.style.display = 'none';
+    noVideoMessage.style.display = 'none';
+    downloadButton.textContent = 'Download';
+    downloadButton.disabled = true;
+
     // Import Firestore functions
     let doc, getDoc;
     try {
@@ -14,13 +29,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         doc = module.doc;
         getDoc = module.getDoc;
     } catch (error) {
-        alert('Gagal memuat Firestore. Periksa koneksi internet.');
+        noVideoMessage.style.display = 'block';
+        noVideoMessage.textContent = 'Gagal memuat Firestore. Periksa koneksi internet.';
         return;
     }
 
     const db = window.firestoreDb;
     if (!db) {
-        alert('Database tidak tersedia. Silakan muat ulang halaman.');
+        noVideoMessage.style.display = 'block';
+        noVideoMessage.textContent = 'Database tidak tersedia. Muat ulang halaman.';
         return;
     }
 
@@ -31,29 +48,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         const videoDoc = await getDoc(videoDocRef);
         if (videoDoc.exists()) {
             videos = videoDoc.data().urls || [];
+        } else {
+            noVideoMessage.style.display = 'block';
+            noVideoMessage.textContent = 'Tidak ada data video di database.';
+            return;
         }
     } catch (error) {
-        alert('Gagal mengambil video dari database. Coba lagi nanti.');
+        noVideoMessage.style.display = 'block';
+        noVideoMessage.textContent = 'Gagal mengambil video dari database.';
         return;
     }
 
     // Filter video yang valid (tidak kosong)
     videos = videos.filter(url => url.trim() !== '');
-
-    const iframe = document.getElementById('youtubeVideo');
-    const noVideoMessage = document.getElementById('no-video-message');
-    const downloadButton = document.getElementById('downloadButton');
-
-    if (!iframe || !noVideoMessage || !downloadButton) {
-        alert('Elemen halaman tidak ditemukan. Muat ulang halaman.');
-        return;
-    }
-
-    // Reset UI awal
-    iframe.style.display = 'none';
-    noVideoMessage.style.display = 'none';
-    downloadButton.textContent = 'Download';
-    downloadButton.disabled = true;
 
     // Handle download button
     function startCountdown() {
@@ -134,14 +141,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 noVideoMessage.style.display = 'none';
                             },
                             onStateChange: function (event) {
-                                if (event.data === YT.PlayerState.PLAYING) {
+                                if (event.data === YT.PlayerState.PLAYING && player) {
                                     const checkTime = setInterval(() => {
-                                        if (player && player.getCurrentTime) {
+                                        try {
                                             const currentTime = player.getCurrentTime();
                                             if (currentTime >= 10) {
                                                 startCountdown();
                                                 clearInterval(checkTime);
                                             }
+                                        } catch (error) {
+                                            clearInterval(checkTime);
                                         }
                                     }, 1000);
                                 }
@@ -163,8 +172,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
 
             // Panggil API secara manual jika sudah dimuat
-            if (window.YT && window.YT.Player) {
-                window.onYouTubeIframeAPIReady();
+            try {
+                if (window.YT && window.YT.Player) {
+                    window.onYouTubeIframeAPIReady();
+                }
+            } catch (error) {
+                // Silent catch
             }
 
             // Fallback jika YouTube API tidak dimuat
@@ -172,7 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!player) {
                     iframe.style.display = 'none';
                     noVideoMessage.style.display = 'block';
-                    noVideoMessage.textContent = 'Gagal memuat YouTube. Coba lagi nanti.';
+                    noVideoMessage.textContent = 'Gagal memuat pemutar YouTube.';
                     downloadButton.disabled = true;
                 }
             }, 5000);
