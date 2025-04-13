@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         },
                         events: {
                             onReady: function (event) {
-                                event.target.setPlaybackQuality('medium');
+                                // Tidak ada pengaturan kualitas, biarkan jaringan menentukan
                             },
                             onStateChange: function (event) {
                                 if (event.data === YT.PlayerState.PLAYING) {
