@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin - Set Viral Videos & Download Link</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -11,24 +11,26 @@
     <h2>Admin Settings</h2>
     <fieldset>
       <legend>YouTube Videos</legend>
-      <input type="text" id="video1" placeholder="YouTube URL 1 (e.g., https://www.youtube.com/watch?v=ID)" />
-      <input type="text" id="video2" placeholder="YouTube URL 2" />
-      <input type="text" id="video3" placeholder="YouTube URL 3" />
-      <input type="text" id="video4" placeholder="YouTube URL 4" />
-      <input type="text" id="video5" placeholder="YouTube URL 5" />
+      <input type="text" id="video1" placeholder="YouTube URL 1">
+      <input type="text" id="video2" placeholder="YouTube URL 2">
+      <input type="text" id="video3" placeholder="YouTube URL 3">
+      <input type="text" id="video4" placeholder="YouTube URL 4">
+      <input type="text" id="video5" placeholder="YouTube URL 5">
       <button onclick="saveVideos()">OK</button>
     </fieldset>
     <fieldset>
       <legend>Download Link</legend>
-      <input type="text" id="downloadLink" placeholder="Download URL (e.g., https://example.com)" />
+      <input type="text" id="downloadLink" placeholder="Download URL">
       <button onclick="saveDownloadLink()">OK</button>
     </fieldset>
+    <button onclick="logout()">Logout</button>
   </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 
-    // Konfigurasi Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
       authDomain: "viral-cok.firebaseapp.com",
@@ -38,12 +40,20 @@
       appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
     };
 
-    // Inisialisasi Firebase dan Firestore
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    // Saat halaman admin dimuat, ambil data yang tersimpan di Firestore
-    window.onload = async () => {
+    const ADMIN_UID = "MASUKKAN_UID_ADMIN_DISINI";
+
+    onAuthStateChanged(auth, async user => {
+      if (!user || user.uid !== ADMIN_UID) {
+        alert("Akses ditolak. Silakan login sebagai admin.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      // Jika login valid, lanjutkan load data
       try {
         const docRef = doc(db, "config", "configData");
         const docSnap = await getDoc(docRef);
@@ -60,10 +70,9 @@
       } catch (error) {
         console.error("Error loading config:", error);
       }
-    };
+    });
 
-    // Fungsi untuk menyimpan URL video ke Firestore
-    async function saveVideos() {
+    window.saveVideos = async function () {
       const videos = [
         document.getElementById('video1').value.trim(),
         document.getElementById('video2').value.trim(),
@@ -71,35 +80,36 @@
         document.getElementById('video4').value.trim(),
         document.getElementById('video5').value.trim()
       ];
-      
-      // Validasi URL video dapat dilakukan di sini jika diperlukan
       try {
         await setDoc(doc(db, "config", "configData"), {
-          youtubeVideos: videos,
-          downloadLink: document.getElementById('downloadLink').value.trim() || ''
+          youtubeVideos: videos
         }, { merge: true });
-        alert("Videos saved! Valid videos will play randomly on the main page.");
+        alert("Videos saved!");
       } catch (error) {
-        alert("Error saving videos: " + error);
+        alert("Error saving videos: " + error.message);
       }
-    }
+    };
 
-    // Fungsi untuk menyimpan link download ke Firestore
-    async function saveDownloadLink() {
-      const downloadLink = document.getElementById('downloadLink').value.trim();
+    window.saveDownloadLink = async function () {
+      const link = document.getElementById('downloadLink').value.trim();
       try {
         await setDoc(doc(db, "config", "configData"), {
-          downloadLink: downloadLink
+          downloadLink: link
         }, { merge: true });
-        alert("Download link saved! It will be available on the main page.");
+        alert("Download link saved!");
       } catch (error) {
-        alert("Error saving download link: " + error);
+        alert("Error saving download link: " + error.message);
       }
-    }
+    };
 
-    // Menjadikan fungsi saveVideos dan saveDownloadLink dapat dipanggil dari HTML
-    window.saveVideos = saveVideos;
-    window.saveDownloadLink = saveDownloadLink;
+    window.logout = async function () {
+      try {
+        await signOut(auth);
+        window.location.href = "login.html";
+      } catch (error) {
+        alert("Logout gagal: " + error.message);
+      }
+    };
   </script>
 </body>
 </html>
