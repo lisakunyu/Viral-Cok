@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Script loaded'); // Debugging: Pastikan script berjalan
+
     // Ambil daftar video dari localStorage
     let videos = JSON.parse(localStorage.getItem('youtubeVideos')) || [];
 
@@ -8,6 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const iframe = document.getElementById('youtubeVideo');
     const noVideoMessage = document.getElementById('no-video-message');
     const downloadButton = document.getElementById('downloadButton');
+
+    // Debugging: Pastikan elemen ditemukan
+    if (!downloadButton) {
+        console.error('Download button not found. Check ID in index.html');
+    } else {
+        console.log('Download button found');
+    }
 
     // Handle video playback
     if (videos.length > 0) {
@@ -38,29 +47,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Handle download button
-    let countdown = 17;
-    downloadButton.textContent = `Download (${countdown})`;
-    downloadButton.disabled = true; // Nonaktifkan tombol saat hitungan mundur
+    if (downloadButton) {
+        let countdown = 17;
+        downloadButton.textContent = `Download (${countdown})`;
+        downloadButton.disabled = true; // Nonaktifkan tombol saat hitungan mundur
+        console.log('Starting countdown'); // Debugging
 
-    const countdownInterval = setInterval(() => {
-        countdown--;
-        if (countdown > 0) {
-            downloadButton.textContent = `Download (${countdown})`;
-        } else if (countdown === 0) {
-            downloadButton.textContent = 'DOWNLOAD';
-            downloadButton.disabled = false; // Aktifkan tombol setelah hitungan selesai
-            clearInterval(countdownInterval);
-        }
-    }, 1000);
-
-    downloadButton.addEventListener('click', () => {
-        if (!downloadButton.disabled) {
-            const downloadLink = localStorage.getItem('downloadLink') || '';
-            if (downloadLink) {
-                window.open(downloadLink, '_blank');
-            } else {
-                alert('No download link set. Please configure it in the admin page.');
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                downloadButton.textContent = `Download (${countdown})`;
+                console.log(`Countdown: ${countdown}`); // Debugging
+            } else if (countdown === 0) {
+                downloadButton.textContent = 'DOWNLOAD';
+                downloadButton.disabled = false; // Aktifkan tombol
+                console.log('Countdown finished, button enabled'); // Debugging
+                clearInterval(countdownInterval);
             }
-        }
-    });
+        }, 1000);
+
+        downloadButton.addEventListener('click', () => {
+            if (!downloadButton.disabled) {
+                const downloadLink = localStorage.getItem('downloadLink') || '';
+                console.log('Button clicked, downloadLink:', downloadLink); // Debugging
+                if (downloadLink) {
+                    window.open(downloadLink, '_blank');
+                } else {
+                    alert('No download link set. Please configure it in the admin page.');
+                }
+            }
+        });
+    }
 });
