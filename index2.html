@@ -44,32 +44,46 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Load saved videos and download link from Firestore
+        // Load videos and download link from Firestore when page loads
         window.onload = function() {
-            // Load videos
-            db.collection("videos").get().then(function(querySnapshot) {
-                let videos = ['', '', '', '', ''];
-                querySnapshot.forEach(function(doc) {
-                    const index = parseInt(doc.id.replace('video', '')) - 1;
-                    videos[index] = doc.data().url || '';
-                });
-                document.getElementById('video1').value = videos[0];
-                document.getElementById('video2').value = videos[1];
-                document.getElementById('video3').value = videos[2];
-                document.getElementById('video4').value = videos[3];
-                document.getElementById('video5').value = videos[4];
-            }).catch(function(error) {
-                console.error("Error loading videos: ", error);
+            // Load videos from Firestore
+            const videoInputs = [
+                document.getElementById('video1'),
+                document.getElementById('video2'),
+                document.getElementById('video3'),
+                document.getElementById('video4'),
+                document.getElementById('video5')
+            ];
+
+            videoInputs.forEach(function(input, index) {
+                const docId = (index + 1).toString(); // Dokumen ID: '1', '2', '3', '4', '5'
+                db.collection("videos").doc(docId).get()
+                    .then(function(doc) {
+                        if (doc.exists && doc.data().url) {
+                            input.value = doc.data().url;
+                        } else {
+                            input.value = ''; // Kosongkan jika tidak ada data
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error("Error loading video " + docId + ": ", error);
+                        alert("Gagal memuat video " + (index + 1) + ". Periksa koneksi atau konsol browser.");
+                    });
             });
 
-            // Load download link
-            db.collection("settings").doc("download").get().then(function(doc) {
-                if (doc.exists) {
-                    document.getElementById('downloadLink').value = doc.data().url || '';
-                }
-            }).catch(function(error) {
-                console.error("Error loading download link: ", error);
-            });
+            // Load download link from Firestore
+            db.collection("settings").doc("download").get()
+                .then(function(doc) {
+                    if (doc.exists && doc.data().url) {
+                        document.getElementById('downloadLink').value = doc.data().url;
+                    } else {
+                        document.getElementById('downloadLink').value = '';
+                    }
+                })
+                .catch(function(error) {
+                    console.error("Error loading download link: ", error);
+                    alert("Gagal memuat tautan unduhan. Periksa koneksi atau konsol browser.");
+                });
         };
 
         // Save videos to Firestore
@@ -82,40 +96,54 @@
                 document.getElementById('video5').value.trim()
             ];
 
-            // Validate URLs
+            // Validate YouTube URLs
             const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?[A-Za-z0-9_-]+/;
-            const validVideos = videos.map(url => youtubeRegex.test(url) || url === '' ? url : '');
+            const validVideos = videos.map(function(url) {
+                return youtubeRegex.test(url) || url === '' ? url : '';
+            });
 
             // Save to Firestore
             validVideos.forEach(function(url, index) {
-                const docId = `video${index + 1}`;
+                const docId = (index + 1).toString(); // Dokumen ID: '1', '2', '3', '4', '5'
                 if (url !== '') {
                     db.collection("videos").doc(docId).set({
                         url: url
-                    }).then(function() {
-                        console.log(`Video ${index + 1} saved`);
-                    }).catch(function(error) {
-                        console.error("Error saving video: ", error);
+                    })
+                    .then(function() {
+                        console.log("Video " + docId + " saved successfully.");
+                    })
+                    .catch(function(error) {
+                        console.error("Error saving video " + docId + ": ", error);
+                        alert("Gagal menyimpan video " + (index + 1) + ". Periksa koneksi atau konsol browser.");
                     });
                 } else {
-                    db.collection("videos").doc(docId).delete().catch(function(error) {
-                        console.error("Error deleting video: ", error);
-                    });
+                    db.collection("videos").doc(docId).delete()
+                        .then(function() {
+                            console.log("Video " + docId + " deleted.");
+                        })
+                        .catch(function(error) {
+                            console.error("Error deleting video " + docId + ": ", error);
+                            alert("Gagal menghapus video " + (index + 1) + ". Periksa koneksi atau konsol browser.");
+                        });
                 }
             });
 
-            alert('Videos saved! Valid videos will play randomly on the main page.');
+            alert("Videos processed successfully! Valid videos saved to Firestore.");
         }
 
         // Save download link to Firestore
         function saveDownloadLink() {
             const downloadLink = document.getElementById('downloadLink').value.trim();
+
             if (downloadLink === '') {
-                db.collection("settings").doc("download").delete().then(function() {
-                    alert('Download link cleared.');
-                }).catch(function(error) {
-                    console.error("Error clearing download link: ", error);
-                });
+                db.collection("settings").doc("download").delete()
+                    .then(function() {
+                        alert("Download link cleared successfully.");
+                    })
+                    .catch(function(error) {
+                        console.error("Error clearing download link: ", error);
+                        alert("Gagal menghapus tautan unduhan. Periksa koneksi atau konsol browser.");
+                    });
                 return;
             }
 
@@ -123,16 +151,21 @@
             if (urlRegex.test(downloadLink)) {
                 db.collection("settings").doc("download").set({
                     url: downloadLink
-                }).then(function() {
-                    alert('Download link saved! It will be available on the main page.');
-                }).catch(function(error) {
+                })
+                .then(function() {
+                    alert("Download link saved successfully!");
+                })
+                .catch(function(error) {
                     console.error("Error saving download link: ", error);
+                    alert("Gagal menyimpan tautan unduhan. Periksa koneksi atau konsol browser.");
                 });
             } else {
-                alert('Please enter a valid URL (e.g., https://example.com).');
+                alert("Please enter a valid URL (e.g., https://example.com).");
             }
         }
     </script>
+
+    <!-- Cloudflare script (dipertahankan) -->
     <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92fb04310912bfdd',t:'MTc0NDU0Nzg2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
