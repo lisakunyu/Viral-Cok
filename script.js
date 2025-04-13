@@ -100,21 +100,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       noVideoMessage.style.display = 'none';
 
       // Inisialisasi YouTube Player
-      window.onYouTubeIframeAPIReady = function () {
-        console.log('YouTube API ready');
-        player = new YT.Player('youtubeVideo', {
-          videoId: videoId,
-          playerVars: {
-            autoplay: 1,
-            mute: 1,
-            controls: 1,
-          },
-          events: {
-            onReady: function (event) {
-              console.log('Player ready');
-              event.target.setPlaybackQuality('medium');
-            },
-            onStateChange: function (event) {
+   window.onYouTubeIframeAPIReady = function () {
+  if (videoId) {
+    player = new YT.Player('youtubeVideo', {
+      videoId: videoId,
+      playerVars: { autoplay: 1, mute: 1, controls: 1 },
+      events: {
+        onReady: event => event.target.setPlaybackQuality('medium')
+      },
+      onStateChange: function (event) {
               if (event.data === YT.PlayerState.PLAYING) {
                 console.log('Video playing');
                 const checkTime = setInterval(() => {
