@@ -79,12 +79,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             // Tangani format youtube.com dan youtu.be
             if (videoUrl.includes('v=')) {
-                const urlParams = new URLSearchParams(videoUrl.split('?')[1]);
-                videoId = urlParams.get('v');
+                videoId = videoUrl.split('v=')[1]?.split('&')[0];
             } else if (videoUrl.includes('youtu.be')) {
-                // Ambil bagian setelah youtu.be/ dan sebelum parameter (jika ada)
-                const path = videoUrl.split('ytu.be/')[1];
-                videoId = path.split('?')[0].split('/')[0];
+                videoId = videoUrl.split('/').pop();
             }
         } catch (error) {
             // Silent error handling
