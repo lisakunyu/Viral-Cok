@@ -14,13 +14,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         doc = module.doc;
         getDoc = module.getDoc;
     } catch (error) {
-        alert('Failed to load Firestore module. Please check your internet connection.');
+        alert('Gagal memuat Firestore. Periksa koneksi internet.');
         return;
     }
 
     const db = window.firestoreDb;
     if (!db) {
-        alert('Firestore database not initialized. Please refresh the page.');
+        alert('Database tidak tersedia. Silakan muat ulang halaman.');
         return;
     }
 
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             videos = videoDoc.data().urls || [];
         }
     } catch (error) {
-        alert('Failed to fetch videos from database. Please try again later.');
+        alert('Gagal mengambil video dari database. Coba lagi nanti.');
         return;
     }
 
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const downloadButton = document.getElementById('downloadButton');
 
     if (!iframe || !noVideoMessage || !downloadButton) {
-        alert('Page elements not found. Please refresh the page.');
+        alert('Elemen halaman tidak ditemukan. Muat ulang halaman.');
         return;
     }
 
@@ -76,10 +76,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (downloadLink) {
                     window.open(downloadLink, '_blank');
                 } else {
-                    alert('No download link set. Please configure it in the admin page.');
+                    alert('Link download belum disetel. Atur di halaman admin.');
                 }
             } catch (error) {
-                alert('Error fetching download link.');
+                alert('Gagal memuat link download.');
             }
         }
     });
@@ -90,21 +90,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const randomIndex = Math.floor(Math.random() * videos.length);
         const videoUrl = videos[randomIndex];
 
-        // Ubah URL ke format embed dengan autoplay
+        // Ekstrak videoId
         let videoId = '';
         try {
-            // Tangani format youtube.com dan youtu.be
-            if (videoUrl.includes('v=')) {
-                videoId = videoUrl.split('v=')[1]?.split('&')[0];
+            if (videoUrl.includes('youtube.com/watch')) {
+                const params = new URLSearchParams(videoUrl.split('?')[1]);
+                videoId = params.get('v') || '';
             } else if (videoUrl.includes('youtu.be')) {
                 videoId = videoUrl.split('youtu.be/')[1].split('/')[0];
             }
-            // Validasi videoId (11 karakter, huruf, angka, underscore, dash)
+            // Validasi videoId
             if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
                 videoId = '';
             }
         } catch (error) {
-            // Silent error handling
+            alert('Gagal memproses URL video.');
         }
 
         if (videoId) {
@@ -138,24 +138,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     }, 1000);
                                 }
                             },
-                            onError: function (event) {
+                            onError: function () {
                                 iframe.style.display = 'none';
                                 noVideoMessage.style.display = 'block';
-                                noVideoMessage.textContent = 'Error loading video. Please check the URL.';
+                                noVideoMessage.textContent = 'Gagal memuat video. Periksa URL.';
                             },
                         },
                     });
                 } catch (error) {
-                    alert('Failed to initialize video player.');
+                    alert('Gagal memulai pemutar video.');
                 }
             };
 
-            // Fallback jika YouTube API tidak dimuat dalam 5 detik
+            // Fallback jika YouTube API tidak dimuat
             setTimeout(() => {
                 if (!window.YT) {
                     iframe.style.display = 'none';
                     noVideoMessage.style.display = 'block';
-                    noVideoMessage.textContent = 'Error loading YouTube API. Please try again later.';
+                    noVideoMessage.textContent = 'Gagal memuat YouTube. Coba lagi nanti.';
                 }
             }, 5000);
         } else {
@@ -163,11 +163,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             noVideoMessage.style.display = 'block';
             downloadButton.textContent = 'DOWNLOAD';
             downloadButton.disabled = true;
+            noVideoMessage.textContent = 'URL video tidak valid.';
         }
     } else {
         iframe.style.display = 'none';
         noVideoMessage.style.display = 'block';
         downloadButton.textContent = 'DOWNLOAD';
         downloadButton.disabled = true;
+        noVideoMessage.textContent = 'Tidak ada video yang tersedia.';
     }
 });
