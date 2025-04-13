@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Set Viral Videos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <h2>Set YouTube Videos</h2>
+        <input type="text" id="video1" placeholder="YouTube URL 1 (e.g., https://www.youtube.com/watch?v=ID)">
+        <input type="text" id="video2" placeholder="YouTube URL 2">
+        <input type="text" id="video3" placeholder="YouTube URL 3">
+        <input type="text" id="video4" placeholder="YouTube URL 4">
+        <input type="text" id="video5" placeholder="YouTube URL 5">
+        <button onclick="saveVideos()">OK</button>
+    </div>
+    <script>
+        // Load saved videos
+        window.onload = () => {
+            const videos = JSON.parse(localStorage.getItem('youtubeVideos')) || ['', '', '', '', ''];
+            document.getElementById('video1').value = videos[0] || '';
+            document.getElementById('video2').value = videos[1] || '';
+            document.getElementById('video3').value = videos[2] || '';
+            document.getElementById('video4').value = videos[3] || '';
+            document.getElementById('video5').value = videos[4] || '';
+        };
+
+        function saveVideos() {
+            const videos = [
+                document.getElementById('video1').value.trim(),
+                document.getElementById('video2').value.trim(),
+                document.getElementById('video3').value.trim(),
+                document.getElementById('video4').value.trim(),
+                document.getElementById('video5').value.trim()
+            ];
+
+            // Validate URLs
+            const validVideos = videos.map(url => {
+                if (url === '') return url;
+                const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?[A-Za-z0-9_-]+/;
+                return youtubeRegex.test(url) ? url : '';
+            });
+
+            localStorage.setItem('youtubeVideos', JSON.stringify(validVideos));
+            alert('Videos saved! Valid videos will play randomly on the main page.');
+        }
+    </script>
+</body>
+</html>
