@@ -60,4 +60,30 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('No download link set. Please configure it in the admin page.');
         }
     });
+
+// Handle download button
+const downloadButton = document.getElementById('downloadButton');
+let countdown = 17;
+downloadButton.textContent = `Download (${countdown})`;
+
+const countdownInterval = setInterval(() => {
+    countdown--;
+    if (countdown >= 0) {
+        downloadButton.textContent = `Download (${countdown})`;
+    }
+    if (countdown <= 0) {
+        downloadButton.style.display = 'block';
+        clearInterval(countdownInterval);
+    }
+}, 1000);
+
+downloadButton.addEventListener('click', () => {
+    const downloadLink = localStorage.getItem('downloadLink') || '';
+    if (downloadLink) {
+        window.open(downloadLink, '_blank');
+    } else {
+        alert('No download link set. Please configure it in the admin page.');
+    }
+});
+
 });
