@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Script loaded'); // Debugging: Pastikan script berjalan
 
     // Ambil daftar video dari localStorage
     let videos = JSON.parse(localStorage.getItem('youtubeVideos')) || [];
