@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test YouTube</title>
+</head>
+<body>
+    <div id="player"></div>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        window.onYouTubeIframeAPIReady = function() {
+            new YT.Player('player', {
+                videoId: 'k9MWCWvN4Nc',
+                playerVars: { autoplay: 1, mute: 1 },
+                events: {
+                    onReady: () => console.log('Player ready'),
+                    onError: (e) => console.error('Error:', e.data)
+                }
+            });
+        };
+    </script>
+</body>
+</html>
