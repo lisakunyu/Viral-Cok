@@ -4,108 +4,127 @@ tag.src = 'https://www.youtube.com/iframe_api';
 const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+let player;
+
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Script.js loaded'); // Debugging
+
+    // Ambil daftar video dari localStorage
+    let videos = JSON.parse(localStorage.getItem('youtubeVideos')) || [];
+    console.log('Videos from localStorage:', videos); // Debugging
+
+    // Filter video yang valid (tidak kosong)
+    videos = videos.filter(url => url.trim() !== '');
+
     const iframe = document.getElementById('youtubeVideo');
     const noVideoMessage = document.getElementById('no-video-message');
+    const downloadButton = document.getElementById('downloadButton');
 
-    if (!iframe || !noVideoMessage) {
-        alert('Elemen halaman tidak ditemukan. Muat ulang halaman.');
-        return;
-    }
+    // Debugging: Pastikan elemen ditemukan
+    if (!iframe) console.error('Iframe not found');
+    if (!noVideoMessage) console.error('No video message not found');
+    if (!downloadButton) console.error('Download button not found');
+    else console.log('Download button found');
 
-    iframe.style.display = 'none';
-    noVideoMessage.style.display = 'block';
-    noVideoMessage.textContent = 'Memuat video...';
+    // Handle download button
+    function startCountdown() {
+        console.log('Starting countdown at 10 seconds'); // Debugging
+        let countdown = 20;
+        downloadButton.textContent = `Download (${countdown} detik)`;
+        downloadButton.disabled = true;
 
-    const db = window.firestoreDb;
-    if (!db) {
-        noVideoMessage.textContent = 'Database tidak tersedia.';
-        return;
-    }
-
-    // Ambil video dari Firestore
-    try {
-        db.collection('videos').doc('list').get().then(videoDoc => {
-            if (videoDoc.exists) {
-                const videos = videoDoc.data().urls || [];
-                const validVideos = videos.filter(url => url.trim() !== '');
-                if (validVideos.length > 0) {
-                    const videoUrl = validVideos[0]; // Ambil video pertama
-                    let videoId = '';
-                    try {
-                        if (videoUrl.includes('youtube.com/watch')) {
-                            const params = new URLSearchParams(videoUrl.split('?')[1]);
-                            videoId = params.get('v') || '';
-                        } else if (videoUrl.includes('youtu.be')) {
-                            videoId = videoUrl.split('youtu.be/')[1].split('/')[0].split('?')[0];
-                        }
-                        if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
-                            throw new Error('Invalid videoId');
-                        }
-                    } catch (error) {
-                        iframe.style.display = 'none';
-                        noVideoMessage.style.display = 'block';
-                        noVideoMessage.textContent = 'URL video tidak valid.';
-                        return;
-                    }
-
-                    window.onYouTubeIframeAPIReady = function () {
-                        try {
-                            new YT.Player('youtubeVideo', {
-                                videoId: videoId,
-                                playerVars: {
-                                    autoplay: 1,
-                                    mute: 1,
-                                    controls: 1,
-                                },
-                                events: {
-                                    onReady: function () {
-                                        iframe.style.display = 'block';
-                                        noVideoMessage.style.display = 'none';
-                                    },
-                                    onError: function () {
-                                        iframe.style.display = 'none';
-                                        noVideoMessage.style.display = 'block';
-                                        noVideoMessage.textContent = 'Gagal memuat video.';
-                                    },
-                                },
-                            });
-                        } catch (error) {
-                            iframe.style.display = 'none';
-                            noVideoMessage.style.display = 'block';
-                            noVideoMessage.textContent = 'Gagal memulai pemutar video.';
-                        }
-                    };
-
-                    if (window.YT && window.YT.Player) {
-                        window.onYouTubeIframeAPIReady();
-                    }
-
-                    setTimeout(() => {
-                        if (!document.querySelector('#youtubeVideo iframe')) {
-                            iframe.style.display = 'none';
-                            noVideoMessage.style.display = 'block';
-                            noVideoMessage.textContent = 'Gagal memuat pemutar YouTube.';
-                        }
-                    }, 5000);
-                } else {
-                    iframe.style.display = 'none';
-                    noVideoMessage.style.display = 'block';
-                    noVideoMessage.textContent = 'Tidak ada video yang tersedia.';
-                }
-            } else {
-                iframe.style.display = 'none';
-                noVideoMessage.style.display = 'block';
-                noVideoMessage.textContent = 'Tidak ada data video di database.';
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                downloadButton.textContent = `Download (${countdown} detik)`;
+                console.log(`Countdown: ${countdown}`); // Debugging
+            } else if (countdown === 0) {
+                downloadButton.textContent = 'DOWNLOAD';
+                downloadButton.disabled = false;
+                console.log('Countdown finished, button enabled'); // Debugging
+                clearInterval(countdownInterval);
             }
-        }).catch(error => {
+        }, 1000);
+    }
+
+    downloadButton.addEventListener('click', () => {
+        if (!downloadButton.disabled) {
+            const downloadLink = localStorage.getItem('downloadLink') || '';
+            console.log('Button clicked, downloadLink:', downloadLink); // Debugging
+            if (downloadLink) {
+                window.open(downloadLink, '_blank');
+            } else {
+                alert('No download link set. Please configure it in the admin page.');
+            }
+        }
+    });
+
+    // Handle video playback
+    if (videos.length > 0) {
+        // Pilih video secara random
+        const randomIndex = Math.floor(Math.random() * videos.length);
+        const videoUrl = videos[randomIndex];
+        console.log('Selected video URL:', videoUrl); // Debugging
+
+        // Ubah URL ke format embed dengan autoplay
+        let videoId = '';
+        if (videoUrl.includes('v=')) {
+            videoId = videoUrl.split('v=')[1]?.split('&')[0];
+        } else if (videoUrl.includes('youtu.be')) {
+            videoId = videoUrl.split('/').pop().split('?')[0];
+        }
+        console.log('Video ID:', videoId); // Debugging
+
+        if (videoId) {
+            iframe.style.display = 'block';
+            noVideoMessage.style.display = 'none';
+
+            // Inisialisasi YouTube Player
+            window.onYouTubeIframeAPIReady = function () {
+                console.log('YouTube API ready'); // Debugging
+                player = new YT.Player('youtubeVideo', {
+                    videoId: videoId,
+                    playerVars: {
+                        autoplay: 1,
+                        mute: 1,
+                        controls: 1,
+                    },
+                    events: {
+                        onReady: function (event) {
+                            console.log('Player ready'); // Debugging
+                            event.target.setPlaybackQuality('medium'); // Coba set ke 360p
+                        },
+                        onStateChange: function (event) {
+                            if (event.data === YT.PlayerState.PLAYING) {
+                                console.log('Video playing'); // Debugging
+                                // Periksa waktu video setiap detik
+                                const checkTime = setInterval(() => {
+                                    if (player && player.getCurrentTime) {
+                                        const currentTime = player.getCurrentTime();
+                                        console.log('Current time:', currentTime); // Debugging
+                                        if (currentTime >= 10) {
+                                            startCountdown();
+                                            clearInterval(checkTime);
+                                        }
+                                    }
+                                }, 1000);
+                            }
+                        },
+                    },
+                });
+            };
+        } else {
             iframe.style.display = 'none';
             noVideoMessage.style.display = 'block';
-            noVideoMessage.textContent = 'Gagal mengambil video dari database.';
-        });
-    } catch (error) {
+            downloadButton.textContent = 'DOWNLOAD';
+            downloadButton.disabled = true;
+            console.log('No valid video ID, countdown not started'); // Debugging
+        }
+    } else {
         iframe.style.display = 'none';
         noVideoMessage.style.display = 'block';
-        noVideoMessage.textContent = 'Gagal mengakses database.';
+        downloadButton.textContent = 'DOWNLOAD';
+        downloadButton.disabled = true;
+        console.log('No videos available, countdown not started'); // Debugging
     }
 });
