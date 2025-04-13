@@ -7,12 +7,20 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="admin-container">
+  <div class="admin-container" id="loginBox">
     <h2>Login Admin</h2>
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Password" />
     <button id="loginBtn">Login</button>
     <p id="loginError" style="color:red;"></p>
+  </div>
+
+  <div class="admin-container" id="uidBox" style="display: none;">
+    <h3>Login Berhasil!</h3>
+    <p>Salin UID kamu di bawah ini dan tempel di file <strong>index2.html</strong>:</p>
+    <code id="uidText" style="word-break: break-all; background: #f1f1f1; padding: 10px; border-radius: 5px;"></code>
+    <br /><br />
+    <button onclick="goToAdmin()">Lanjut ke Halaman Admin</button>
   </div>
 
   <script type="module">
@@ -38,16 +46,24 @@
 
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        alert("Login berhasil!\nUID kamu:\n" + userCredential.user.uid);
+        const uid = userCredential.user.uid;
 
-// Simpan status login di localStorage
-        localStorage.setItem("adminUID", userCredential.user.uid);
-        window.location.href = "index2.html";
+        // Tampilkan UID di layar
+        document.getElementById("uidText").textContent = uid;
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("uidBox").style.display = "block";
+
+        // Simpan UID jika mau digunakan otomatis
+        localStorage.setItem("adminUID", uid);
+
       } catch (error) {
-        console.error("Login gagal:", error.message);
-        errorMsg.textContent = "Email atau password salah.";
+        errorMsg.textContent = "Login gagal: " + error.message;
       }
     });
+
+    window.goToAdmin = function () {
+      window.location.href = "index2.html";
+    };
   </script>
 </body>
 </html>
