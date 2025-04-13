@@ -7,34 +7,20 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 let player;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Import Firestore functions
-    let doc, getDoc;
-    try {
-        const module = await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js");
-        doc = module.doc;
-        getDoc = module.getDoc;
-    } catch (error) {
-        alert('Failed to load Firestore module. Please check your internet connection.');
-        return;
-    }
+    console.log('Script.js loaded');
 
+    // Import Firestore functions
+    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js");
     const db = window.firestoreDb;
-    if (!db) {
-        alert('Firestore database not initialized. Please refresh the page.');
-        return;
-    }
 
     // Ambil daftar video dari Firestore
     let videos = [];
-    try {
-        const videoDocRef = doc(db, "videos", "list");
-        const videoDoc = await getDoc(videoDocRef);
-        if (videoDoc.exists()) {
-            videos = videoDoc.data().urls || [];
-        }
-    } catch (error) {
-        alert('Failed to fetch videos from database. Please try again later.');
+    const videoDocRef = doc(db, "videos", "list");
+    const videoDoc = await getDoc(videoDocRef);
+    if (videoDoc.exists()) {
+        videos = videoDoc.data().urls || [];
     }
+    console.log('Videos from Firestore:', videos);
 
     // Filter video yang valid (tidak kosong)
     videos = videos.filter(url => url.trim() !== '');
@@ -43,13 +29,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const noVideoMessage = document.getElementById('no-video-message');
     const downloadButton = document.getElementById('downloadButton');
 
-    if (!iframe || !noVideoMessage || !downloadButton) {
-        alert('Page elements not found. Please refresh the page.');
-        return;
-    }
+    // Debugging: Pastikan elemen ditemukan
+    if (!iframe) console.error('Iframe not found');
+    if (!noVideoMessage) console.error('No video message not found');
+    if (!downloadButton) console.error('Download button not found');
+    else console.log('Download button found');
 
     // Handle download button
     function startCountdown() {
+        console.log('Starting countdown at 20 seconds');
         let countdown = 20;
         downloadButton.textContent = `Download (${countdown} detik)`;
         downloadButton.disabled = true;
@@ -58,9 +46,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             countdown--;
             if (countdown > 0) {
                 downloadButton.textContent = `Download (${countdown} detik)`;
+                console.log(`Countdown: ${countdown}`);
             } else if (countdown === 0) {
                 downloadButton.textContent = 'DOWNLOAD';
                 downloadButton.disabled = false;
+                console.log('Countdown finished, button enabled');
                 clearInterval(countdownInterval);
             }
         }, 1000);
@@ -68,17 +58,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     downloadButton.addEventListener('click', async () => {
         if (!downloadButton.disabled) {
-            try {
-                const downloadDocRef = doc(db, "settings", "download");
-                const downloadDoc = await getDoc(downloadDocRef);
-                const downloadLink = downloadDoc.exists() ? downloadDoc.data().url : '';
-                if (downloadLink) {
-                    window.open(downloadLink, '_blank');
-                } else {
-                    alert('No download link set. Please configure it in the admin page.');
-                }
-            } catch (error) {
-                alert('Error fetching download link.');
+            const downloadDocRef = doc(db, "settings", "download");
+            const downloadDoc = await getDoc(downloadDocRef);
+            const downloadLink = downloadDoc.exists() ? downloadDoc.data().url : '';
+            console.log('Button clicked, downloadLink:', downloadLink);
+            if (downloadLink) {
+                window.open(downloadLink, '_blank');
+            } else {
+                alert('No download link set. Please configure it in the admin page.');
             }
         }
     });
@@ -88,83 +75,66 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Pilih video secara random
         const randomIndex = Math.floor(Math.random() * videos.length);
         const videoUrl = videos[randomIndex];
+        console.log('Selected video URL:', videoUrl);
 
         // Ubah URL ke format embed dengan autoplay
         let videoId = '';
-        try {
-            // Tangani format youtube.com dan youtu.be
-            if (videoUrl.includes('v=')) {
-                const urlParams = new URLSearchParams(videoUrl.split('?')[1]);
-                videoId = urlParams.get('v');
-            } else if (videoUrl.includes('youtu.be')) {
-                const path = videoUrl.split('youtu.be/')[1];
-                videoId = path.split('?')[0].split('/')[0].split('#')[0];
-            }
-        } catch (error) {
-            // Silent error handling
+        if (videoUrl.includes('v=')) {
+            videoId = videoUrl.split('v=')[1]?.split('&')[0];
+        } else if (videoUrl.includes('youtu.be')) {
+            videoId = videoUrl.split('/').pop().split('?')[0];
         }
+        console.log('Video ID:', videoId);
 
-        if (videoId && /^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+        if (videoId) {
             iframe.style.display = 'block';
             noVideoMessage.style.display = 'none';
 
             // Inisialisasi YouTube Player
             window.onYouTubeIframeAPIReady = function () {
-                try {
-                    player = new YT.Player('youtubeVideo', {
-                        videoId: videoId,
-                        playerVars: {
-                            autoplay: 1,
-                            mute: 1,
-                            controls: 1,
+                console.log('YouTube API ready');
+                player = new YT.Player('youtubeVideo', {
+                    videoId: videoId,
+                    playerVars: {
+                        autoplay: 1,
+                        mute: 1,
+                        controls: 1,
+                    },
+                    events: {
+                        onReady: function (event) {
+                            console.log('Player ready');
+                            event.target.setPlaybackQuality('medium');
                         },
-                        events: {
-                            onReady: function (event) {
-                                event.target.setPlaybackQuality('medium');
-                            },
-                            onStateChange: function (event) {
-                                if (event.data === YT.PlayerState.PLAYING) {
-                                    const checkTime = setInterval(() => {
-                                        if (player && player.getCurrentTime) {
-                                            const currentTime = player.getCurrentTime();
-                                            if (currentTime >= 10) {
-                                                startCountdown();
-                                                clearInterval(checkTime);
-                                            }
+                        onStateChange: function (event) {
+                            if (event.data === YT.PlayerState.PLAYING) {
+                                console.log('Video playing');
+                                const checkTime = setInterval(() => {
+                                    if (player && player.getCurrentTime) {
+                                        const currentTime = player.getCurrentTime();
+                                        console.log('Current time:', currentTime);
+                                        if (currentTime >= 10) {
+                                            startCountdown();
+                                            clearInterval(checkTime);
                                         }
-                                    }, 1000);
-                                }
-                            },
-                            onError: function (event) {
-                                iframe.style.display = 'none';
-                                noVideoMessage.style.display = 'block';
-                                noVideoMessage.textContent = 'Error loading video. Please check the URL.';
-                            },
+                                    }
+                                }, 1000);
+                            }
                         },
-                    });
-                } catch (error) {
-                    alert('Failed to initialize video player.');
-                }
+                    },
+                });
             };
-
-            // Fallback jika YouTube API tidak dimuat dalam 5 detik
-            setTimeout(() => {
-                if (!window.YT) {
-                    iframe.style.display = 'none';
-                    noVideoMessage.style.display = 'block';
-                    noVideoMessage.textContent = 'Error loading YouTube API. Please try again later.';
-                }
-            }, 5000);
         } else {
             iframe.style.display = 'none';
             noVideoMessage.style.display = 'block';
             downloadButton.textContent = 'DOWNLOAD';
             downloadButton.disabled = true;
+            console.log('No valid video ID, countdown not started');
         }
     } else {
         iframe.style.display = 'none';
         noVideoMessage.style.display = 'block';
         downloadButton.textContent = 'DOWNLOAD';
         downloadButton.disabled = true;
+        console.log('No videos available, countdown not started');
     }
 });
