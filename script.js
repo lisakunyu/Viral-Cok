@@ -49,6 +49,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // Reset UI awal
+    iframe.style.display = 'none';
+    noVideoMessage.style.display = 'none';
+    downloadButton.textContent = 'DOWNLOAD';
+    downloadButton.disabled = true;
+
     // Handle download button
     function startCountdown() {
         let countdown = 20;
@@ -97,20 +103,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const params = new URLSearchParams(videoUrl.split('?')[1]);
                 videoId = params.get('v') || '';
             } else if (videoUrl.includes('youtu.be')) {
-                videoId = videoUrl.split('youtu.be/')[1].split('/')[0];
+                videoId = videoUrl.split('youtu.be/')[1].split('/')[0].split('?')[0];
             }
             // Validasi videoId
             if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
                 videoId = '';
             }
         } catch (error) {
-            alert('Gagal memproses URL video.');
+            iframe.style.display = 'none';
+            noVideoMessage.style.display = 'block';
+            noVideoMessage.textContent = 'Gagal memproses URL video.';
+            return;
         }
 
         if (videoId) {
-            iframe.style.display = 'block';
-            noVideoMessage.style.display = 'none';
-
             // Inisialisasi YouTube Player
             window.onYouTubeIframeAPIReady = function () {
                 try {
@@ -122,8 +128,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                             controls: 1,
                         },
                         events: {
-                            onReady: function (event) {
-                                // Tidak ada pengaturan kualitas, biarkan jaringan menentukan
+                            onReady: function () {
+                                iframe.style.display = 'block';
+                                noVideoMessage.style.display = 'none';
                             },
                             onStateChange: function (event) {
                                 if (event.data === YT.PlayerState.PLAYING) {
@@ -146,13 +153,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                         },
                     });
                 } catch (error) {
-                    alert('Gagal memulai pemutar video.');
+                    iframe.style.display = 'none';
+                    noVideoMessage.style.display = 'block';
+                    noVideoMessage.textContent = 'Gagal memulai pemutar video.';
                 }
             };
 
+            // Panggil API secara manual jika sudah dimuat
+            if (window.YT && window.YT.Player) {
+                window.onYouTubeIframeAPIReady();
+            }
+
             // Fallback jika YouTube API tidak dimuat
             setTimeout(() => {
-                if (!window.YT) {
+                if (!window.YT || !player) {
                     iframe.style.display = 'none';
                     noVideoMessage.style.display = 'block';
                     noVideoMessage.textContent = 'Gagal memuat YouTube. Coba lagi nanti.';
@@ -161,15 +175,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             iframe.style.display = 'none';
             noVideoMessage.style.display = 'block';
-            downloadButton.textContent = 'DOWNLOAD';
-            downloadButton.disabled = true;
             noVideoMessage.textContent = 'URL video tidak valid.';
         }
     } else {
         iframe.style.display = 'none';
         noVideoMessage.style.display = 'block';
-        downloadButton.textContent = 'DOWNLOAD';
-        downloadButton.disabled = true;
         noVideoMessage.textContent = 'Tidak ada video yang tersedia.';
     }
 });
