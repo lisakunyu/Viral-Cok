@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login Admin</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="admin-container">
+    <h2>Login Admin</h2>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
+      authDomain: "viral-cok.firebaseapp.com",
+      projectId: "viral-cok",
+      storageBucket: "viral-cok.firebasestorage.app",
+      messagingSenderId: "465866226747",
+      appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const errorMsg = document.getElementById("loginError");
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log("Login berhasil, UID:", userCredential.user.uid);
+        // Simpan status login di localStorage
+        localStorage.setItem("adminUID", userCredential.user.uid);
+        window.location.href = "index2.html";
+      } catch (error) {
+        console.error("Login gagal:", error.message);
+        errorMsg.textContent = "Email atau password salah.";
+      }
+    });
+  </script>
+</body>
+</html>
