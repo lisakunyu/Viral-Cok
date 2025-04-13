@@ -21,11 +21,12 @@ const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 let player;
+let videoId = "";
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('Script.js loaded');
 
-  // Ambil konfigurasi dari Firestore (dokumen config/configData)
+  // Ambil konfigurasi dari Firestore
   let configData = { youtubeVideos: [], downloadLink: "" };
   try {
     const docRef = doc(db, "config", "configData");
@@ -46,13 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const noVideoMessage = document.getElementById('no-video-message');
   const downloadButton = document.getElementById('downloadButton');
 
-  if (!iframe) console.error('Iframe not found');
-  if (!noVideoMessage) console.error('No video message not found');
-  if (!downloadButton) console.error('Download button not found');
-  else console.log('Download button found');
+  if (!iframe || !noVideoMessage || !downloadButton) return;
 
   function startCountdown() {
-    console.log('Starting countdown at 20 seconds');
     let countdown = 20;
     downloadButton.textContent = `Download (${countdown} detik)`;
     downloadButton.disabled = true;
@@ -60,11 +57,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       countdown--;
       if (countdown > 0) {
         downloadButton.textContent = `Download (${countdown} detik)`;
-        console.log(`Countdown: ${countdown}`);
       } else {
         downloadButton.textContent = 'DOWNLOAD';
         downloadButton.disabled = false;
-        console.log('Countdown finished, button enabled');
         clearInterval(countdownInterval);
       }
     }, 1000);
@@ -81,63 +76,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Jika ada video yang valid, pilih secara acak dan muat YouTube player
   if (videos.length > 0) {
     const randomIndex = Math.floor(Math.random() * videos.length);
     const videoUrl = videos[randomIndex];
-    console.log('Selected video URL:', videoUrl);
 
-    let videoId = '';
     if (videoUrl.includes('v=')) {
       videoId = videoUrl.split('v=')[1]?.split('&')[0];
     } else if (videoUrl.includes('youtu.be')) {
       videoId = videoUrl.split('/').pop().split('?')[0];
     }
-    console.log('Video ID:', videoId);
 
     if (videoId) {
       iframe.style.display = 'block';
       noVideoMessage.style.display = 'none';
-
-      // Inisialisasi YouTube Player
-   window.onYouTubeIframeAPIReady = function () {
-  if (videoId) {
-    player = new YT.Player('youtubeVideo', {
-      videoId: videoId,
-      playerVars: { autoplay: 1, mute: 1, controls: 1 },
-      events: {
-        onReady: event => event.target.setPlaybackQuality('medium')
-      },
-      onStateChange: function (event) {
-              if (event.data === YT.PlayerState.PLAYING) {
-                console.log('Video playing');
-                const checkTime = setInterval(() => {
-                  if (player && player.getCurrentTime) {
-                    const currentTime = player.getCurrentTime();
-                    console.log('Current time:', currentTime);
-                    if (currentTime >= 10) {
-                      startCountdown();
-                      clearInterval(checkTime);
-                    }
-                  }
-                }, 1000);
-              }
-            },
-          },
-        });
-      };
     } else {
       iframe.style.display = 'none';
       noVideoMessage.style.display = 'block';
       downloadButton.textContent = 'DOWNLOAD';
       downloadButton.disabled = true;
-      console.log('No valid video ID, countdown not started');
     }
   } else {
     iframe.style.display = 'none';
     noVideoMessage.style.display = 'block';
     downloadButton.textContent = 'DOWNLOAD';
     downloadButton.disabled = true;
-    console.log('No videos available, countdown not started');
   }
 });
+
+window.onYouTubeIframeAPIReady = function () {
+  if (videoId) {
+    player = new YT.Player('youtubeVideo', {
+      videoId: videoId,
+      playerVars: {
+        autoplay: 1,
+        mute: 1,
+        controls: 1,
+      },
+      events: {
+        onReady: function (event) {
+          event.target.setPlaybackQuality('medium');
+        },
+        onStateChange: function (event) {
+          if (event.data === YT.PlayerState.PLAYING) {
+            const checkTime = setInterval(() => {
+              if (player && player.getCurrentTime) {
+                const currentTime = player.getCurrentTime();
+                if (currentTime >= 10) {
+                  startCountdown();
+                  clearInterval(checkTime);
+                }
+              }
+            }, 1000);
+          }
+        }
+      }
+    });
+  }
+};
