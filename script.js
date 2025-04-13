@@ -88,6 +88,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (videoId) {
       iframe.style.display = 'block';
+     downloadButton.disabled = true;
+     downloadButton.textContent = 'Download (20 detik)';
       noVideoMessage.style.display = 'none';
     } else {
       iframe.style.display = 'none';
