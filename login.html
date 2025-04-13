@@ -15,14 +15,6 @@
     <p id="loginError" style="color:red;"></p>
   </div>
 
-  <div class="admin-container" id="uidBox" style="display: none;">
-    <h3>Login Berhasil!</h3>
-    <p>Salin UID kamu di bawah ini dan tempel di file <strong>index2.html</strong>:</p>
-    <code id="uidText" style="word-break: break-all; background: #f1f1f1; padding: 10px; border-radius: 5px;"></code>
-    <br /><br />
-    <button onclick="goToAdmin()">Lanjut ke Halaman Admin</button>
-  </div>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
@@ -46,24 +38,14 @@
 
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const uid = userCredential.user.uid;
-
-        // Tampilkan UID di layar
-        document.getElementById("uidText").textContent = uid;
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("uidBox").style.display = "block";
-
-        // Simpan UID jika mau digunakan otomatis
-        localStorage.setItem("adminUID", uid);
-
+        // Simpan UID ke localStorage (opsional)
+        localStorage.setItem("adminUID", userCredential.user.uid);
+        // Arahkan ke halaman admin
+        window.location.href = "index2.html";
       } catch (error) {
         errorMsg.textContent = "Login gagal: " + error.message;
       }
     });
-
-    window.goToAdmin = function () {
-      window.location.href = "index2.html";
-    };
   </script>
 </body>
 </html>
