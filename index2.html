@@ -24,21 +24,53 @@
             <button onclick="saveDownloadLink()">OK</button>
         </fieldset>
     </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
+            authDomain: "viral-cok.firebaseapp.com",
+            projectId: "viral-cok",
+            storageBucket: "viral-cok.firebasestorage.app",
+            messagingSenderId: "465866226747",
+            appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.firestoreDb = db; // Membuat db tersedia secara global
+    </script>
+
     <script>
         // Load saved videos and download link
-        window.onload = () => {
-            const videos = JSON.parse(localStorage.getItem('youtubeVideos')) || ['', '', '', '', ''];
+        window.onload = async () => {
+            const db = window.firestoreDb;
+            const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js");
+
+            // Load videos
+            const videoDocRef = doc(db, "videos", "list");
+            const videoDoc = await getDoc(videoDocRef);
+            const videos = videoDoc.exists() ? videoDoc.data().urls : ['', '', '', '', ''];
             document.getElementById('video1').value = videos[0] || '';
             document.getElementById('video2').value = videos[1] || '';
             document.getElementById('video3').value = videos[2] || '';
             document.getElementById('video4').value = videos[3] || '';
             document.getElementById('video5').value = videos[4] || '';
 
-            const downloadLink = localStorage.getItem('downloadLink') || '';
+            // Load download link
+            const downloadDocRef = doc(db, "settings", "download");
+            const downloadDoc = await getDoc(downloadDocRef);
+            const downloadLink = downloadDoc.exists() ? downloadDoc.data().url : '';
             document.getElementById('downloadLink').value = downloadLink;
         };
 
-        function saveVideos() {
+        async function saveVideos() {
+            const db = window.firestoreDb;
+            const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js");
+
             const videos = [
                 document.getElementById('video1').value.trim(),
                 document.getElementById('video2').value.trim(),
@@ -54,20 +86,24 @@
                 return youtubeRegex.test(url) ? url : '';
             });
 
-            localStorage.setItem('youtubeVideos', JSON.stringify(validVideos));
+            // Save to Firestore
+            await setDoc(doc(db, "videos", "list"), { urls: validVideos });
             alert('Videos saved! Valid videos will play randomly on the main page.');
         }
 
-        function saveDownloadLink() {
+        async function saveDownloadLink() {
+            const db = window.firestoreDb;
+            const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js");
+
             const downloadLink = document.getElementById('downloadLink').value.trim();
             if (downloadLink === '') {
-                localStorage.setItem('downloadLink', '');
+                await setDoc(doc(db, "settings", "download"), { url: '' });
                 alert('Download link cleared.');
                 return;
             }
             const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/;
             if (urlRegex.test(downloadLink)) {
-                localStorage.setItem('downloadLink', downloadLink);
+                await setDoc(doc(db, "settings", "download"), { url: downloadLink });
                 alert('Download link saved! It will be available on the main page.');
             } else {
                 alert('Please enter a valid URL (e.g., https://example.com).');
