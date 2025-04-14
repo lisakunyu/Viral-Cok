@@ -13,37 +13,42 @@
   <button id="loginBtn">Login</button>
   <p>Belum punya akun? <a href="signup.html">Daftar di sini</a></p>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
-      authDomain: "viral-cok.firebaseapp.com",
-      projectId: "viral-cok",
-      storageBucket: "viral-cok.firebasestorage.app",
-      messagingSenderId: "465866226747",
-      appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
+    authDomain: "viral-cok.firebaseapp.com",
+    projectId: "viral-cok",
+    storageBucket: "viral-cok.firebasestorage.app",
+    messagingSenderId: "465866226747",
+    appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
-    document.getElementById("loginBtn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        if (userCredential.user.emailVerified) {
-          window.location.href = "user.html";
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (userCredential.user.emailVerified) {
+        const uid = userCredential.user.uid;
+        if (uid === "vjkn9l9OYNQfzHlir5EI2S1avPe2") {
+          window.location.href = "admin.html";
         } else {
-          alert("Silakan verifikasi email terlebih dahulu.");
+          window.location.href = "user.html";
         }
-      } catch (error) {
-        alert("Login gagal: " + error.message);
+      } else {
+        alert("Silakan verifikasi email terlebih dahulu.");
       }
-    });
-  </script>
+    } catch (error) {
+      alert("Login gagal: " + error.message);
+    }
+  });
+</script>
 </body>
 </html>
