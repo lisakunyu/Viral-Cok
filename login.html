@@ -37,14 +37,15 @@
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
+        const adminUid = "vjkn9l9OYNQfzHlir5EI2S1avPe2"; // Ganti jika UID admin berubah
 
-        if (user.emailVerified) {
-          const adminUid = "vjkn9l9OYNQfzHlir5EI2S1avPe2"; // Ganti jika UID admin berubah
-          if (user.uid === adminUid) {
-            window.location.href = "admin.html";
-          } else {
-            window.location.href = "user.html";
-          }
+        // Jika admin, langsung masuk meskipun belum verifikasi email
+        if (user.uid === adminUid) {
+          window.location.href = "admin.html";
+        } 
+        // Kalau user biasa, wajib verifikasi email
+        else if (user.emailVerified) {
+          window.location.href = "user.html";
         } else {
           alert("Silakan verifikasi email terlebih dahulu.");
         }
