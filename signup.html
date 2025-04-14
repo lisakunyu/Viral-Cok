@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signup</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>Signup</h2>
+  <form id="signupForm">
+    <input type="email" id="email" placeholder="Email" required><br>
+    <input type="password" id="password" placeholder="Password" required><br>
+    <button type="submit">Signup with Email</button>
+  </form>
+
+  <hr>
+
+  <h3>Atau daftar dengan nomor telepon</h3>
+  <div id="phoneSignup">
+    <input type="text" id="phoneNumber" placeholder="+62xxxxxxxxxxx"><br>
+    <div id="recaptcha-container"></div>
+    <button onclick="signInWithPhone()">Kirim OTP</button>
+  </div>
+
+  <p>Sudah punya akun? <a href="login.html">Login</a></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signInWithPhoneNumber, RecaptchaVerifier } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
+      authDomain: "viral-cok.firebaseapp.com",
+      projectId: "viral-cok",
+      storageBucket: "viral-cok.firebasestorage.app",
+      messagingSenderId: "465866226747",
+      appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Signup Email
+    document.getElementById("signupForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(userCredential.user);
+        alert("Signup berhasil! Silakan verifikasi email Anda.");
+        window.location.href = "confirm.html";
+      } catch (error) {
+        alert("Gagal signup: " + error.message);
+      }
+    });
+
+    // Setup Recaptcha
+    window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+      'size': 'normal',
+      'callback': (response) => {
+        console.log("Recaptcha verified");
+      }
+    }, auth);
+
+    // Signup Phone
+    window.signInWithPhone = async function () {
+      const phoneNumber = document.getElementById("phoneNumber").value;
+      const appVerifier = window.recaptchaVerifier;
+
+      try {
+        const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+        window.confirmationResult = confirmationResult;
+        alert("Kode OTP dikirim ke nomor Anda.");
+        window.location.href = "otp.html";
+      } catch (error) {
+        alert("Gagal mengirim OTP: " + error.message);
+      }
+    }
+  </script>
+</body>
+</html>
