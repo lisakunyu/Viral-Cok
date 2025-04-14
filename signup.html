@@ -18,9 +18,9 @@
 
   <h3>Atau daftar dengan nomor telepon</h3>
   <div id="phoneSignup">
-    <input type="text" id="phoneNumber" placeholder="+62xxxxxxxxxxx"><br>
+    <input type="text" id="phoneNumber" placeholder="+62xxxxxxxxxxx" required><br>
     <div id="recaptcha-container"></div>
-    <button onclick="signInWithPhone()">Kirim OTP</button>
+    <button type="button" onclick="signInWithPhone()">Kirim OTP</button>
   </div>
 
   <p>Sudah punya akun? <a href="login.html">Login</a></p>
@@ -41,7 +41,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Signup Email
+    // Signup dengan Email/Password
     document.getElementById("signupForm").addEventListener("submit", async e => {
       e.preventDefault();
       const email = document.getElementById("email").value;
@@ -57,7 +57,7 @@
       }
     });
 
-    // Setup Recaptcha
+    // Setup Recaptcha untuk OTP
     window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
       'size': 'normal',
       'callback': (response) => {
@@ -65,7 +65,7 @@
       }
     }, auth);
 
-    // Signup Phone
+    // Signup dengan Nomor Telepon (OTP)
     window.signInWithPhone = async function () {
       const phoneNumber = document.getElementById("phoneNumber").value;
       const appVerifier = window.recaptchaVerifier;
@@ -73,7 +73,7 @@
       try {
         const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
         window.confirmationResult = confirmationResult;
-        alert("Kode OTP dikirim ke nomor Anda.");
+        alert("Kode OTP telah dikirim ke nomor Anda.");
         window.location.href = "otp.html";
       } catch (error) {
         alert("Gagal mengirim OTP: " + error.message);
