@@ -3,10 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Daftar Akun</title>
+  <title>Daftar</title>
   <link rel="stylesheet" href="loginsignup.css" />
   <style>
-    /* Buat select box terlihat sama dengan input */
+    /* Container untuk mengatur lebar dan sentralisasi form */
+    .container {
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: #fff;
+      border-radius: 10px;
+    }
+    /* Style untuk input dan select */
     input, select {
       width: 100%;
       padding: 14px;
@@ -16,11 +25,29 @@
       font-size: 16px;
       transition: border 0.3s;
     }
-    /* Pesan error */
-    .error-message {
-      color: red;
-      font-size: 12px;
-      margin-top: 4px;
+    input:focus, select:focus {
+      border-color: #66afe9;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      background-color: #007BFF;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    p a {
+      color: #007BFF;
+      text-decoration: none;
+    }
+    p a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -29,44 +56,26 @@
   <h2>Daftar</h2>
   <form id="signupForm">
     <input type="text" id="nama" placeholder="Nama Lengkap" required>
-    <div class="error-message" id="namaError"></div>
-
     <select id="provinsi" required>
       <option value="">Pilih Provinsi</option>
     </select>
-    <div class="error-message" id="provinsiError"></div>
-
     <select id="kabupaten" required>
       <option value="">Pilih Kabupaten</option>
     </select>
-    <div class="error-message" id="kabupatenError"></div>
-
     <select id="kecamatan" required>
       <option value="">Pilih Kecamatan</option>
     </select>
-    <div class="error-message" id="kecamatanError"></div>
-
     <select id="kelurahan" required>
       <option value="">Pilih Kelurahan</option>
     </select>
-    <div class="error-message" id="kelurahanError"></div>
-
-    <input type="tel" id="nohp" placeholder="Nomor Telepon" required>
-    <div class="error-message" id="nohpError"></div>
-
+    <input type="text" id="nohp" placeholder="Nomor Telepon" required>
     <input type="email" id="email" placeholder="Email" required>
-    <div class="error-message" id="emailError"></div>
-
     <input type="password" id="password" placeholder="Password" required>
-    <div class="error-message" id="passwordError"></div>
-
     <button type="submit">Daftar</button>
   </form>
-
   <p>Sudah punya akun? <a href="login.html">Login</a></p>
-  
+
   <script type="module">
-    // Firebase & Firestore imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
@@ -84,7 +93,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Fungsi load data wilayah menggunakan API EMSIFA
     async function loadWilayah() {
       const provinsiSelect = document.getElementById('provinsi');
       const kabupatenSelect = document.getElementById('kabupaten');
@@ -96,13 +104,11 @@
         return await res.json();
       };
 
-      // Load provinsi
       const provinsi = await getWilayah('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
       provinsi.forEach(p => {
         provinsiSelect.innerHTML += `<option value="${p.id}-${p.name}">${p.name}</option>`;
       });
 
-      // Saat provinsi dipilih, muat kabupaten
       provinsiSelect.addEventListener('change', async () => {
         const [id] = provinsiSelect.value.split('-');
         const kabupaten = await getWilayah(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${id}.json`);
@@ -114,105 +120,53 @@
         });
       });
 
-      // Saat kabupaten dipilih, muat kecamatan
       kabupatenSelect.addEventListener('change', async () => {
         const [id] = kabupatenSelect.value.split('-');
         const kecamatan = await getWilayah(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${id}.json`);
         kecamatanSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
         kelurahanSelect.innerHTML = '<option value="">Pilih Kelurahan</option>';
-        kecamatan.forEach(k => kecamatanSelect.innerHTML += `<option value="${k.id}-${k.name}">${k.name}</option>`);
+        kecamatan.forEach(k => {
+          kecamatanSelect.innerHTML += `<option value="${k.id}-${k.name}">${k.name}</option>`;
+        });
       });
 
-      // Saat kecamatan dipilih, muat kelurahan
       kecamatanSelect.addEventListener('change', async () => {
         const [id] = kecamatanSelect.value.split('-');
         const kelurahan = await getWilayah(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${id}.json`);
         kelurahanSelect.innerHTML = '<option value="">Pilih Kelurahan</option>';
-        kelurahan.forEach(k => kelurahanSelect.innerHTML += `<option value="${k.name}">${k.name}</option>`);
+        kelurahan.forEach(k => {
+          kelurahanSelect.innerHTML += `<option value="${k.name}">${k.name}</option>`;
+        });
       });
     }
-    // Panggil fungsi loadWilayah
     loadWilayah();
 
-    // Fungsi validasi menggunakan regex
-    function validateEmail(email) {
-      const re = /^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$/;
-      return re.test(email);
-    }
-
-    function validatePhone(phone) {
-      // Format valid: diawali 08 atau +628, diikuti minimal 8 digit angka
-      const re = /^(08|\\+628)[0-9]{8,}$/;
-      return re.test(phone);
-    }
-
-    // Validasi form dan simpan data ke Firestore
     document.getElementById("signupForm").addEventListener("submit", async e => {
       e.preventDefault();
 
-      // Reset pesan error
-      document.querySelectorAll('.error-message').forEach(el => el.textContent = "");
-
       const nama = document.getElementById("nama").value.trim();
-      const provinsiVal = document.getElementById("provinsi").value;
-      const kabupatenVal = document.getElementById("kabupaten").value;
-      const kecamatanVal = document.getElementById("kecamatan").value;
-      const kelurahanVal = document.getElementById("kelurahan").value;
+      const provinsi = document.getElementById("provinsi").value;
+      const kabupaten = document.getElementById("kabupaten").value;
+      const kecamatan = document.getElementById("kecamatan").value;
+      const kelurahan = document.getElementById("kelurahan").value;
       const nohp = document.getElementById("nohp").value.trim();
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
-      let valid = true;
-      if (!nama) {
-        document.getElementById("namaError").textContent = "Nama wajib diisi.";
-        valid = false;
+      if (!nama || !provinsi || !kabupaten || !kecamatan || !kelurahan || !nohp || !email || !password) {
+        alert("Harap isi semua kolom yang wajib diisi.");
+        return;
       }
-      if (!provinsiVal) {
-        document.getElementById("provinsiError").textContent = "Pilih provinsi.";
-        valid = false;
-      }
-      if (!kabupatenVal) {
-        document.getElementById("kabupatenError").textContent = "Pilih kabupaten.";
-        valid = false;
-      }
-      if (!kecamatanVal) {
-        document.getElementById("kecamatanError").textContent = "Pilih kecamatan.";
-        valid = false;
-      }
-      if (!kelurahanVal) {
-        document.getElementById("kelurahanError").textContent = "Pilih kelurahan.";
-        valid = false;
-      }
-      if (!nohp) {
-        document.getElementById("nohpError").textContent = "Nomor telepon wajib diisi.";
-        valid = false;
-      } else if (!validatePhone(nohp)) {
-        document.getElementById("nohpError").textContent = "Format nomor telepon tidak valid.";
-        valid = false;
-      }
-      if (!email) {
-        document.getElementById("emailError").textContent = "Email wajib diisi.";
-        valid = false;
-      } else if (!validateEmail(email)) {
-        document.getElementById("emailError").textContent = "Format email tidak valid.";
-        valid = false;
-      }
-      if (!password) {
-        document.getElementById("passwordError").textContent = "Password wajib diisi.";
-        valid = false;
-      }
-      if (!valid) return;
 
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         await sendEmailVerification(userCredential.user);
-        // Simpan data pengguna ke koleksi 'users'
         await setDoc(doc(db, "users", userCredential.user.uid), {
           nama,
-          provinsi: provinsiVal.split('-')[1],
-          kabupaten: kabupatenVal.split('-')[1],
-          kecamatan: kecamatanVal.split('-')[1],
-          kelurahan: kelurahanVal,
+          provinsi: provinsi.split('-')[1],
+          kabupaten: kabupaten.split('-')[1],
+          kecamatan: kecamatan.split('-')[1],
+          kelurahan,
           nohp,
           email
         });
