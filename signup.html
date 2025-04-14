@@ -1,20 +1,126 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Viral Video Player</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daftar Akun</title>
+  <link rel="stylesheet" href="loginsignup.css"/>
+  <style>
+    .error-message {
+      color: red;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+  </style>
 </head>
 <body>
-  <div class="video-container">
-    <div id="youtubeVideo"></div>
-    <p id="no-video-message" style="display: none;">
-      No videos available. Please set videos in the admin page.
-    </p>
-    SABAR TUNGGU NANTI JUGA JALAN WAKTUNYA  
-    <button id="downloadButton">Download (20 detik)</button>
-  </div>
-  <script src="script.js" type="module"></script>
+<div class="container">
+  <h2>Daftar</h2>
+  <form id="signupForm">
+    <input type="text" id="name" placeholder="Nama Lengkap" required>
+    <div class="error-message" id="nameError"></div>
+
+    <input type="tel" id="phone" placeholder="Nomor Telepon" required>
+    <div class="error-message" id="phoneError"></div>
+
+    <select id="province" required>
+      <option value="">Pilih Provinsi</option>
+    </select>
+    <div class="error-message" id="provinceError"></div>
+
+    <select id="regency" required>
+      <option value="">Pilih Kabupaten/Kota</option>
+    </select>
+    <div class="error-message" id="regencyError"></div>
+
+    <select id="district" required>
+      <option value="">Pilih Kecamatan</option>
+    </select>
+    <div class="error-message" id="districtError"></div>
+
+    <input type="text" id="village" placeholder="Kampung/Kelurahan" required>
+    <div class="error-message" id="villageError"></div>
+
+    <input type="email" id="email" placeholder="Email" required>
+    <div class="error-message" id="emailError"></div>
+
+    <input type="password" id="password" placeholder="Password" required>
+    <div class="error-message" id="passwordError"></div>
+
+    <button type="submit">Daftar</button>
+  </form>
+
+  <p>Sudah punya akun? <a href="login.html">Login</a></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
+      authDomain: "viral-cok.firebaseapp.com",
+      projectId: "viral-cok",
+      storageBucket: "viral-cok.firebasestorage.app",
+      messagingSenderId: "465866226747",
+      appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Lokasi otomatis berdasarkan IP
+    fetch('https://ipapi.co/json')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('province').innerHTML = `<option value="${data.region}">${data.region}</option>`;
+        document.getElementById('regency').innerHTML = `<option value="${data.city}">${data.city}</option>`;
+        document.getElementById('district').innerHTML = `<option value="${data.region_code}">${data.region_code}</option>`;
+      });
+
+    const form = document.getElementById("signupForm");
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+
+      // Reset error
+      document.querySelectorAll('.error-message').forEach(el => el.textContent = "");
+
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const province = document.getElementById("province").value;
+      const regency = document.getElementById("regency").value;
+      const district = document.getElementById("district").value;
+      const village = document.getElementById("village").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      let valid = true;
+      if (!name) { document.getElementById("nameError").textContent = "Nama wajib diisi."; valid = false; }
+      if (!phone) { document.getElementById("phoneError").textContent = "Nomor telepon wajib diisi."; valid = false; }
+      if (!province) { document.getElementById("provinceError").textContent = "Provinsi wajib dipilih."; valid = false; }
+      if (!regency) { document.getElementById("regencyError").textContent = "Kabupaten wajib dipilih."; valid = false; }
+      if (!district) { document.getElementById("districtError").textContent = "Kecamatan wajib dipilih."; valid = false; }
+      if (!village) { document.getElementById("villageError").textContent = "Kelurahan wajib diisi."; valid = false; }
+      if (!email) { document.getElementById("emailError").textContent = "Email wajib diisi."; valid = false; }
+      if (!password) { document.getElementById("passwordError").textContent = "Password wajib diisi."; valid = false; }
+
+      if (!valid) return;
+
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(userCred.user);
+        await setDoc(doc(db, "user", userCred.user.uid), {
+          name, phone, province, regency, district, village, email
+        });
+        alert("Berhasil daftar! Silakan verifikasi email.");
+        window.location.href = "confirm.html";
+      } catch (error) {
+        alert("Gagal daftar: " + error.message);
+      }
+    });
+  </script>
+</div>
 </body>
 </html>
