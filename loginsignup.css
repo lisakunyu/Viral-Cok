@@ -1,83 +1,115 @@
-/* Global */
+/* Reset & Global */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
   background: linear-gradient(to right, #4facfe, #00f2fe);
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  margin: 0;
+  padding: 20px;
 }
 
+/* Container */
+.container {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  padding: 30px 20px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Header */
 h2, h3 {
   text-align: center;
+  margin-bottom: 20px;
   color: #333;
 }
 
-form, #phoneSignup {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  width: 100%;
-  max-width: 350px;
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
+/* Input & Button */
 input {
-  padding: 12px;
-  font-size: 16px;
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
   border: 1px solid #ccc;
-  border-radius: 8px;
-  outline: none;
+  border-radius: 10px;
+  font-size: 16px;
   transition: border 0.3s;
 }
 
 input:focus {
   border-color: #4facfe;
+  outline: none;
 }
 
 button {
-  padding: 12px;
-  font-size: 16px;
-  background: #4facfe;
+  width: 100%;
+  padding: 14px;
+  background-color: #4facfe;
   color: white;
+  font-size: 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.3s;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
 }
 
 button:hover {
-  background: #00c6fb;
+  background-color: #00c6fb;
 }
 
+/* Links & Text */
 p {
+  margin-top: 15px;
   text-align: center;
   color: #444;
+  font-size: 14px;
 }
 
 a {
   color: #4facfe;
   text-decoration: none;
+  font-weight: 500;
 }
 
 a:hover {
   text-decoration: underline;
 }
 
-hr {
-  margin: 30px 0;
-  border: none;
-  height: 1px;
-  background-color: #eee;
+/* Recaptcha styling */
+#recaptcha-container {
+  margin: 10px 0;
+  display: flex;
+  justify-content: center;
 }
 
-/* Mobile */
-@media (max-width: 400px) {
-  form, #phoneSignup {
-    padding: 20px;
+/* Divider */
+hr {
+  margin: 25px 0;
+  border: none;
+  height: 1px;
+  background-color: #ddd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .container {
+    padding: 25px 15px;
+  }
+
+  input, button {
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  h2, h3 {
+    font-size: 20px;
   }
 }
