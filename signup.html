@@ -1,58 +1,33 @@
-<!DOCTYPE html>
-<html lang="id">
+<!DOCTYPE html><html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Daftar Akun</title>
-  <link rel="stylesheet" href="loginsignup.css"/>
-  <style>
-    .error-message {
-      color: red;
-      font-size: 12px;
-      margin-top: 4px;
-    }
-  </style>
+  <title>Daftar</title>
+  <link rel="stylesheet" href="loginsignup.css" />
 </head>
 <body>
 <div class="container">
   <h2>Daftar</h2>
   <form id="signupForm">
-    <input type="text" id="name" placeholder="Nama Lengkap" required>
-    <div class="error-message" id="nameError"></div>
-
-    <input type="tel" id="phone" placeholder="Nomor Telepon" required>
-    <div class="error-message" id="phoneError"></div>
-
-    <select id="province" required>
+    <input type="text" id="nama" placeholder="Nama Lengkap" required><br>
+    <select id="provinsi" required>
       <option value="">Pilih Provinsi</option>
-    </select>
-    <div class="error-message" id="provinceError"></div>
-
-    <select id="regency" required>
-      <option value="">Pilih Kabupaten/Kota</option>
-    </select>
-    <div class="error-message" id="regencyError"></div>
-
-    <select id="district" required>
+    </select><br>
+    <select id="kabupaten" required>
+      <option value="">Pilih Kabupaten</option>
+    </select><br>
+    <select id="kecamatan" required>
       <option value="">Pilih Kecamatan</option>
-    </select>
-    <div class="error-message" id="districtError"></div>
-
-    <input type="text" id="village" placeholder="Kampung/Kelurahan" required>
-    <div class="error-message" id="villageError"></div>
-
-    <input type="email" id="email" placeholder="Email" required>
-    <div class="error-message" id="emailError"></div>
-
-    <input type="password" id="password" placeholder="Password" required>
-    <div class="error-message" id="passwordError"></div>
-
+    </select><br>
+    <select id="kelurahan" required>
+      <option value="">Pilih Kelurahan</option>
+    </select><br>
+    <input type="text" id="nohp" placeholder="Nomor Telepon" required><br>
+    <input type="email" id="email" placeholder="Email" required><br>
+    <input type="password" id="password" placeholder="Password" required><br>
     <button type="submit">Daftar</button>
   </form>
-
-  <p>Sudah punya akun? <a href="login.html">Login</a></p>
-
-  <script type="module">
+  <p>Sudah punya akun? <a href="login.html">Login</a></p>  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
@@ -61,7 +36,7 @@
       apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
       authDomain: "viral-cok.firebaseapp.com",
       projectId: "viral-cok",
-      storageBucket: "viral-cok.firebasestorage.app",
+      storageBucket: "viral-cok.appspot.com",
       messagingSenderId: "465866226747",
       appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
     };
@@ -70,57 +45,83 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Lokasi otomatis berdasarkan IP
-    fetch('https://ipapi.co/json')
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('province').innerHTML = `<option value="${data.region}">${data.region}</option>`;
-        document.getElementById('regency').innerHTML = `<option value="${data.city}">${data.city}</option>`;
-        document.getElementById('district').innerHTML = `<option value="${data.region_code}">${data.region_code}</option>`;
+    // Load lokasi
+    async function loadWilayah() {
+      const provinsiSelect = document.getElementById('provinsi');
+      const kabupatenSelect = document.getElementById('kabupaten');
+      const kecamatanSelect = document.getElementById('kecamatan');
+      const kelurahanSelect = document.getElementById('kelurahan');
+
+      const getWilayah = async (url) => {
+        const res = await fetch(url);
+        return await res.json();
+      };
+
+      const provinsi = await getWilayah('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
+      provinsi.forEach(p => provinsiSelect.innerHTML += `<option value="${p.id}-${p.name}">${p.name}</option>`);
+
+      provinsiSelect.addEventListener('change', async () => {
+        const [id] = provinsiSelect.value.split('-');
+        const kabupaten = await getWilayah(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${id}.json`);
+        kabupatenSelect.innerHTML = '<option value="">Pilih Kabupaten</option>';
+        kecamatanSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
+        kelurahanSelect.innerHTML = '<option value="">Pilih Kelurahan</option>';
+        kabupaten.forEach(k => kabupatenSelect.innerHTML += `<option value="${k.id}-${k.name}">${k.name}</option>`);
       });
 
-    const form = document.getElementById("signupForm");
+      kabupatenSelect.addEventListener('change', async () => {
+        const [id] = kabupatenSelect.value.split('-');
+        const kecamatan = await getWilayah(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${id}.json`);
+        kecamatanSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
+        kelurahanSelect.innerHTML = '<option value="">Pilih Kelurahan</option>';
+        kecamatan.forEach(k => kecamatanSelect.innerHTML += `<option value="${k.id}-${k.name}">${k.name}</option>`);
+      });
 
-    form.addEventListener("submit", async e => {
+      kecamatanSelect.addEventListener('change', async () => {
+        const [id] = kecamatanSelect.value.split('-');
+        const kelurahan = await getWilayah(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${id}.json`);
+        kelurahanSelect.innerHTML = '<option value="">Pilih Kelurahan</option>';
+        kelurahan.forEach(k => kelurahanSelect.innerHTML += `<option value="${k.name}">${k.name}</option>`);
+      });
+    }
+
+    loadWilayah();
+
+    document.getElementById("signupForm").addEventListener("submit", async e => {
       e.preventDefault();
 
-      // Reset error
-      document.querySelectorAll('.error-message').forEach(el => el.textContent = "");
-
-      const name = document.getElementById("name").value.trim();
-      const phone = document.getElementById("phone").value.trim();
-      const province = document.getElementById("province").value;
-      const regency = document.getElementById("regency").value;
-      const district = document.getElementById("district").value;
-      const village = document.getElementById("village").value.trim();
+      const nama = document.getElementById("nama").value.trim();
+      const provinsi = document.getElementById("provinsi").value;
+      const kabupaten = document.getElementById("kabupaten").value;
+      const kecamatan = document.getElementById("kecamatan").value;
+      const kelurahan = document.getElementById("kelurahan").value;
+      const nohp = document.getElementById("nohp").value.trim();
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
-      let valid = true;
-      if (!name) { document.getElementById("nameError").textContent = "Nama wajib diisi."; valid = false; }
-      if (!phone) { document.getElementById("phoneError").textContent = "Nomor telepon wajib diisi."; valid = false; }
-      if (!province) { document.getElementById("provinceError").textContent = "Provinsi wajib dipilih."; valid = false; }
-      if (!regency) { document.getElementById("regencyError").textContent = "Kabupaten wajib dipilih."; valid = false; }
-      if (!district) { document.getElementById("districtError").textContent = "Kecamatan wajib dipilih."; valid = false; }
-      if (!village) { document.getElementById("villageError").textContent = "Kelurahan wajib diisi."; valid = false; }
-      if (!email) { document.getElementById("emailError").textContent = "Email wajib diisi."; valid = false; }
-      if (!password) { document.getElementById("passwordError").textContent = "Password wajib diisi."; valid = false; }
-
-      if (!valid) return;
+      if (!nama || !provinsi || !kabupaten || !kecamatan || !kelurahan || !nohp || !email || !password) {
+        alert("Harap isi semua kolom yang wajib diisi.");
+        return;
+      }
 
       try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
-        await sendEmailVerification(userCred.user);
-        await setDoc(doc(db, "user", userCred.user.uid), {
-          name, phone, province, regency, district, village, email
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(userCredential.user);
+        await setDoc(doc(db, "users", userCredential.user.uid), {
+          nama,
+          provinsi: provinsi.split('-')[1],
+          kabupaten: kabupaten.split('-')[1],
+          kecamatan: kecamatan.split('-')[1],
+          kelurahan,
+          nohp,
+          email
         });
-        alert("Berhasil daftar! Silakan verifikasi email.");
+        alert("Pendaftaran berhasil! Silakan verifikasi email Anda.");
         window.location.href = "confirm.html";
       } catch (error) {
         alert("Gagal daftar: " + error.message);
       }
     });
-  </script>
-</div>
+  </script></div>
 </body>
 </html>
