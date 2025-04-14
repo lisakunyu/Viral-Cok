@@ -35,8 +35,7 @@
 
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        if (user.emailVerified) {
+        if (userCredential.user.emailVerified) {
           window.location.href = "user.html";
         } else {
           alert("Silakan verifikasi email terlebih dahulu.");
