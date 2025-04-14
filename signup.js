@@ -69,9 +69,8 @@ document.getElementById("signupForm").addEventListener("submit", async e => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
 
-  // Validasi input
   if (!nama || !provinsi || !kabupaten || !kecamatan || !kelurahan || !nohp || !email || !password) {
-    showErrorMessage("Harap isi semua kolom yang wajib diisi.");
+    alert("Harap isi semua kolom yang wajib diisi.");
     return;
   }
 
@@ -90,14 +89,22 @@ document.getElementById("signupForm").addEventListener("submit", async e => {
     alert("Pendaftaran berhasil! Silakan verifikasi email Anda.");
     window.location.href = "confirm.html";
   } catch (error) {
-    showErrorMessage("Gagal daftar: " + error.message);
+    let errorMessage = "Terjadi kesalahan saat mendaftar. ";
+    switch (error.code) {
+      case "auth/email-already-in-use":
+        errorMessage = "Email sudah digunakan. Gunakan email lain.";
+        break;
+      case "auth/invalid-email":
+        errorMessage = "Email tidak valid. Harap periksa kembali.";
+        break;
+      case "auth/weak-password":
+        errorMessage = "Password terlalu lemah. Gunakan minimal 6 karakter.";
+        break;
+      default:
+        errorMessage += error.message;
+        break;
+    }
+    alert(errorMessage);
+    return;
   }
 });
-
-// Menampilkan pesan kesalahan
-function showErrorMessage(message) {
-  const errorMessage = document.createElement("div");
-  errorMessage.classList.add("error-message");
-  errorMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i>${message}`;
-  document.querySelector("form").appendChild(errorMessage);
-}
