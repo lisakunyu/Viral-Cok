@@ -59,8 +59,23 @@ select {
   border-radius: 10px;
   font-size: 16px;
   background-color: #fff;
+  appearance: none;  /* Removes the default arrow in most browsers */
+  -webkit-appearance: none; /* Safari */
+  -moz-appearance: none; /* Firefox */
+  transition: border-color 0.3s ease;
 }
 
+select:focus {
+  border-color: #4facfe;
+  outline: none;
+}
+
+/* Styling for the custom select arrow */
+select::-ms-expand {
+  display: none; /* For IE */
+}
+
+/* Button */
 button {
   align-items: center;
   width: 100%;
