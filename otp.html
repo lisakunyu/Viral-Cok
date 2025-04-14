@@ -8,8 +8,8 @@
 </head>
 <body>
   <h2>Verifikasi OTP</h2>
-  <p>Kode OTP telah dikirim ke nomor Anda.</p>
-  <input type="text" id="otpCode" placeholder="Masukkan kode OTP" required><br>
+  <p>Masukkan kode OTP yang telah dikirim ke nomor Anda:</p>
+  <input type="text" id="otpCode" placeholder="Kode OTP" required><br>
   <button onclick="verifyCode()">Verifikasi</button>
 
   <script type="module">
@@ -33,12 +33,12 @@
 
       try {
         const result = await window.confirmationResult.confirm(code);
-        alert("Verifikasi berhasil!");
+        alert("Verifikasi OTP berhasil!");
         window.location.href = "user.html";
       } catch (error) {
-        alert("Kode OTP salah atau kadaluarsa: " + error.message);
+        alert("Kode OTP salah atau telah kadaluarsa: " + error.message);
       }
-    };
+    }
   </script>
 </body>
 </html>
