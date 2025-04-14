@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verifikasi OTP</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>Verifikasi OTP</h2>
+  <p>Kode OTP telah dikirim ke nomor Anda.</p>
+  <input type="text" id="otpCode" placeholder="Masukkan kode OTP" required><br>
+  <button onclick="verifyCode()">Verifikasi</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDDB8wgUqtfZUHx0qc6xT97L7oBp-k9nns",
+      authDomain: "viral-cok.firebaseapp.com",
+      projectId: "viral-cok",
+      storageBucket: "viral-cok.firebasestorage.app",
+      messagingSenderId: "465866226747",
+      appId: "1:465866226747:web:cbe62190014be0f1bcf01e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.verifyCode = async function () {
+      const code = document.getElementById("otpCode").value;
+
+      try {
+        const result = await window.confirmationResult.confirm(code);
+        alert("Verifikasi berhasil!");
+        window.location.href = "user.html";
+      } catch (error) {
+        alert("Kode OTP salah atau kadaluarsa: " + error.message);
+      }
+    };
+  </script>
+</body>
+</html>
